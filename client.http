@@ -1,4 +1,7 @@
+GET http://localhost:3002/
 
+content
+###
 post http://localhost:3002/login/admin
 Content-Type: application/json
 

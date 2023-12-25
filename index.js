@@ -3,6 +3,7 @@ const app = express();
 const port = process.env.PORT || 3002;
 //const mongoURI = process.env.MONGODB_URI
 app.use(express.json());
+const jwt = require('jsonwebtoken');
 
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsdoc = require('swagger-jsdoc');
