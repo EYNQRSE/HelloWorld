@@ -1,0 +1,41 @@
+
+post http://localhost:3002/login/admin
+Content-Type: application/json
+
+{
+    "username":"YOMOMCYBERCAFE",
+    "password":"donottrythisathome69"
+}
+###
+
+POST http://localhost:3002/login/customer
+Content-Type: application/json
+
+{
+    "idproof":"b022120016",
+    "password":"uneedtoleave00"
+}
+###
+post http://localhost:3002/create/customer
+Content-Type: application/json
+
+{
+    "customername":"AFIFI",
+    "idproof":"b022120017",
+    "password":"lethimcook12"
+}
+###
+PUT http://localhost:3002/update/computer/PC_02
+Authorization: Bearer 
+Content-Type: application/json
+
+{
+    "systemworking": "yes",
+    "available": "yes"
+}
+###
+GET http://localhost:3002/view/computer/admin
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IllPTU9NQ1lCRVJDQUZFIiwiaWF0IjoxNzAzNDE1Mjk1LCJleHAiOjE3MDM0MTU4OTV9.B_CO9lMhQY95cfXOT8e9H7FzkRuH1vLvw2NyM44Iwzo
+###
+GET http://localhost:3002/view/customer/admin
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IllPTU9NQ1lCRVJDQUZFIiwiaWF0IjoxNzAzNDE2OTk3LCJleHAiOjE3MDM0MTc1OTd9.r2ktxLHMBQHyRCPB4Wq3cw1-9s1Cdpwmf6f34rgRZhU
