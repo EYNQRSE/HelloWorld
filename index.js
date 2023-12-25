@@ -1,43 +1,28 @@
 const express = require('express');
-const swaggerJSDoc = require('swagger-jsdoc');
-const swaggerUi = require('swagger-ui-express');
-const { MongoClient, ServerApiVersion } = require('mongodb');
-const jwt = require('jsonwebtoken');
 const app = express();
-const port = 3002;
-
-// Configuration settings
-const config = {
-  mongodb: {
-    uri: process.env.MONGODB_URI || 'mongodb://localhost:27017/cybercafe',
-  },
-  jwt: {
-    secret: process.env.JWT_SECRET || 'your-secret-key',
-    expiresIn: process.env.JWT_EXPIRES_IN || 600, // seconds
-  },
-  server: {
-    port: process.env.PORT || 3002,
-  }, 
-};
-// Your Swagger specification file (assuming it's named swagger.js)
-const swaggerDefinition = require('./swagger');
-
-const options = {
-  swaggerDefinition,
-  // List of files to be processed by swagger-jsdoc
-  apis: ['./swagger.js'],
-};
-
-const swaggerSpec = swaggerJSDoc(options);
-
-// Serve Swagger documentation using Swagger UI
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-
+const port = process.env.PORT || 3002;
+//const mongoURI = process.env.MONGODB_URI
 app.use(express.json());
 
+const swaggerUi = require('swagger-ui-express');
+const swaggerJsdoc = require('swagger-jsdoc');
+const options = {
+  definition: {
+    openapi: '3.0.0',
+    info: {
+      title: 'Cybercafe Management System API',
+      description: 'API for managing visitors in a cybercafe',
+      version: '1.0.0',
+    },
+  },
+  apis: ['./swagger.js'], //files containing annotations as above
+};
+const swaggerSpec = swaggerJsdoc(options);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 
 //connect to mongodb
+const { MongoClient, ServerApiVersion } = require('mongodb');
 const uri = "mongodb+srv://B022120016:hUF1LQVnNZ5d2QpI@group12.7c7yswx.mongodb.net/?retryWrites=true&w=majority";
 const client = new MongoClient(uri, {
   serverApi: {
