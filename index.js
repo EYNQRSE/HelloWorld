@@ -4,10 +4,6 @@ const port = process.env.PORT || 3002;
 //const mongoURI = process.env.MONGODB_URI
 app.use(express.json());
 
-app.get('/',(req,res) => {
-    res.send('welcome to YOMOM')
-});
-
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsdoc = require('swagger-jsdoc');
 const options = {
@@ -38,6 +34,10 @@ const client = new MongoClient(uri, {
 
 client.connect().then(res => {
   console.log(res);
+});
+
+app.get('/',(req,res) => {
+    res.send('welcome to YOMOM')
 });
 
 //admin configuration
