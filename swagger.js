@@ -467,7 +467,6 @@ const swaggerDoc = {
           },
         },
       },
-  
     },
   };
   
