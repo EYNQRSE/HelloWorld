@@ -125,6 +125,8 @@
  *   post:
  *     summary: Customer Signup
  *     description: Create a new customer account
+ *     security:
+ *       - BearerAuth: []
  *     requestBody:
  *       content:
  *         application/json:
