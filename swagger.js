@@ -22,7 +22,7 @@
  *       scheme: bearer
  *       bearerFormat: JWT
  *
- * * @openapi
+ * @openapi
  * /login/admin:
  *   post:
  *     summary: Admin Login
