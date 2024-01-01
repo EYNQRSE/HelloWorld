@@ -47,7 +47,7 @@
  *         description: Internal Server Error
  *
  * @openapi
- * /view/customer/admin:
+ * /get/member:
  *   get:
  *     summary: View Customers (Admin Only)
  *     description: Get a list of all customers (admin only)
@@ -121,10 +121,10 @@
  *         description: Internal Server Error
  *
  * @openapi
- * /create/customer:
+ * /create/member:
  *   post:
- *     summary: Customer Signup
- *     description: Create a new customer account
+ *     summary: Member Signup
+ *     description: Create a new member account
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -140,15 +140,15 @@
  *         description: Account created successfully
  *         content:
  *           application/json:
- *             example: 'Your account has been created. Welcome YOMOM member!!:D'
+ *             example: 'member account has been created. Welcome YOMOM member!!:D'
  *       '500':
  *         description: Internal Server Error
  *
  * @openapi
- * /login/customer:
+ * /login/member:
  *   post:
- *     summary: Customer Login
- *     description: Authenticate as a customer and receive an access token
+ *     summary: member Login
+ *     description: Authenticate as a member and receive an access token
  *     requestBody:
  *       content:
  *         application/json:
