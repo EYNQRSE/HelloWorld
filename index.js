@@ -4,6 +4,22 @@ const port = process.env.PORT || 3002;
 app.use(express.json());
 const jwt = require('jsonwebtoken');
 
+const swaggerUi = require('swagger-ui-express');
+const swaggerJsdoc = require('swagger-jsdoc');
+const options = {
+  definition: {
+    openapi: '3.0.0',
+    info: {
+      title: 'Cybercafe Management System API',
+      description: 'API for managing visitors in a cybercafe',
+      version: '1.0.0',
+    },
+  },
+  apis: ['./swagger.js'], //files containing annotations as above
+};
+const swaggerSpec = swaggerJsdoc(options);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
 const { MongoClient, ServerApiVersion } = require('mongodb');
 const uri = "mongodb+srv://B022120016:hUF1LQVnNZ5d2QpI@group12.7c7yswx.mongodb.net/?retryWrites=true&w=majority";
 const client = new MongoClient(uri, {
