@@ -197,7 +197,7 @@ async function memberLogin(idproof, password) {
     }
 }
 
-app.get('/get/members', verifyAdminToken, async (req, res) => {
+app.get('/get/member', verifyAdminToken, async (req, res) => {
     try {
         const allMembers = await getAllMembers();
         res.send(allMembers);

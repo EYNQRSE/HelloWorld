@@ -65,7 +65,7 @@
  *     summary: View Member (Admin Only)
  *     description: Get a list of all members (admin only)
  *     tags:
- *       - admin
+ *       - Admin
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -88,7 +88,7 @@
  *     summary: Update Computer Configuration (Admin Only)
  *     description: Update the configuration of a computer (admin only)
  *     tags:
- *       - admin
+ *       - Admin
  *     parameters:
  *       - name: computername
  *         in: path
@@ -120,7 +120,7 @@
  *     summary: View Computer Configuration (Admin Only)
  *     description: Get a list of computer configurations (admin only)
  *     tags:
- *       - admin
+ *       - Admin
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -148,7 +148,7 @@
  *     summary: View Available Cabins
  *     description: Get a list of available cabins
  *     tags:
- *       - public
+ *       - Public
  *     responses:
  *       '200':
  *         description: Successful operation
@@ -169,7 +169,7 @@
  *     summary: member Login
  *     description: Authenticate as a member and receive an access token
  *     tags:
- *       - member
+ *       - Member
  *     requestBody:
  *       content:
  *         application/json:
