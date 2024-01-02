@@ -165,7 +165,7 @@ function createMember(reqcustomername, reqidproof, reqpassword) {
         "password": reqpassword,
         "role": "member"
     });
-    return "Customer account has been created. Welcome YOMOM member!!:D";
+    return "Member account has been created. Welcome YOMOM member!!:D";
 }
 
 app.post('/login/member', async (req, res) => {
@@ -225,31 +225,50 @@ async function getAllMembers() {
 app.post('/create/visitor', verifyToken, async (req, res) => {
     try {
         const memberName = req.user.customername;
-        console.log(req.user);
 
+        // Call the modified createVisitor function
         let result = await createVisitor(
             memberName,
             req.body.visitorname,
             req.body.idproof
         );
 
-        res.send(result);
+        // Check the result and send appropriate response
+        if (result.startsWith("Visitor account has been created")) {
+            res.send(result);
+        } else {
+            // Handle the case where the member has reached the maximum limit
+            res.status(400).send(result);
+        }
     } catch (error) {
         console.error(error);
         res.status(500).send('Internal Server Error');
     }
 });
 
-async function createVisitor(memberName, visitorName, idProof, entryTime = 0, cabinNo = 0, payment = 0, timeSpend = 0) {
+
+async function createVisitor(memberName, visitorName, idProof) {
     try {
+        // Check the number of visitors created by the member
+        const existingVisitorsCount = await client
+            .db('cybercafe')
+            .collection('visitor')
+            .countDocuments({ createdBy: memberName });
+
+        // If the member has already created 4 visitors, return an error message
+        if (existingVisitorsCount >= 4) {
+            return "You have reached the maximum limit of 4 visitors. Cannot create more visitors.";
+        }
+
+        // If the member has not reached the limit, proceed with creating the visitor
         const result = await client.db('cybercafe').collection('visitor').insertOne({
             "createdBy": memberName,
             "visitorname": visitorName,
             "idproof": idProof,
-            "cabinno": cabinNo,
-            "entrytime": entryTime,
-            "payment": payment,
-            "timespend": timeSpend,
+            "cabinno": 0, // You may set default values for other fields as needed
+            "entrytime": 0,
+            "payment": 0,
+            "timespend": 0,
         });
 
         return "Visitor account has been created. Welcome to YOMOM Cybercafe! :D";
@@ -275,6 +294,21 @@ app.get('/get/my-visitors', verifyToken, async (req, res) => {
         res.status(500).send('Internal Server Error');
     }
 });
+
+async function getVisitorsCreatedByMember(memberName) {
+    try {
+        const result = await client
+            .db('cybercafe')
+            .collection('visitor')
+            .find({ createdBy: { $eq: memberName } }, { _id: 0, visitorname: 1, idproof: 1 })
+            .toArray();
+
+        return result;
+    } catch (error) {
+        console.error(error);
+        throw error;
+    }
+}
 
 async function getAllVisitors() {
     try {
