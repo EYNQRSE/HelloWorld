@@ -1,9 +1,11 @@
+//configure const
 const express = require('express');
 const app = express();
 const port = process.env.PORT || 3002;
 app.use(express.json());
 const jwt = require('jsonwebtoken');
 
+//connect to swagger
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsdoc = require('swagger-jsdoc');
 const options = {
@@ -20,6 +22,7 @@ const options = {
 const swaggerSpec = swaggerJsdoc(options);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
+//connect to mongo
 const { MongoClient, ServerApiVersion } = require('mongodb');
 const uri = "mongodb+srv://B022120016:hUF1LQVnNZ5d2QpI@group12.7c7yswx.mongodb.net/?retryWrites=true&w=majority";
 const client = new MongoClient(uri, {
@@ -34,10 +37,12 @@ client.connect().then(res => {
   console.log(res);
 });
 
+//front page
 app.get('/',(req,res) => {
     res.send('welcome to YOMOM');
 });
 
+//function to verify token
 function verifyToken(req, res, next) {
     let header = req.headers.authorization;
     if (!header) {
@@ -57,6 +62,7 @@ function verifyToken(req, res, next) {
     });
 }
 
+// function for admin token
 function verifyAdminToken(req, res, next) {
     verifyToken(req, res, function () {
         if (req.user && req.user.role === 'admin') {
@@ -66,35 +72,36 @@ function verifyAdminToken(req, res, next) {
         }
     });
 }
-
+// admin login
 app.post('/login/admin', (req, res) => {
     login(req.body.username, req.body.password)
-        .then(result => {
-            if (result.message === 'Access Granted') {
-                const token = generateToken({ username: req.body.username, role: 'admin' });
-                res.send({ message: 'Successful login', token });
-            } else {
-                res.send('Login unsuccessful');
-            }
-        })
-        .catch(error => {
-            console.error(error);
-            res.status(500).send("Internal Server Error");
-        });
-});
-
+      .then(result => {
+        if (result.message === 'Access Granted') {
+          const token = generateToken({ username: req.body.username, role: 'admin' });
+          res.send({ message: 'Successful login', token });
+        } else {
+          res.send('Login unsuccessful');
+        }
+      })
+      .catch(error => {
+        console.error(error);
+        res.status(500).send("Internal Server Error");
+      });
+  });
+  
 async function login(reqUsername, reqPassword) {
-    let matchUser = await client.db('cybercafe').collection('admin').findOne({ username: { $eq: reqUsername } });
-
+    let matchUser = await client.db('cybercafe').collection('admin').findOne({ username: reqUsername });
+  
     if (!matchUser)
-        return { message: "User not found!" };
-
+      return { message: "User not found!" };
+  
     if (matchUser.password === reqPassword)
-        return { message: "Access Granted", user: matchUser };
+      return { message: "Access Granted", user: matchUser };
     else
-        return { message: "Invalid password" };
-}
+      return { message: "Invalid password" };
+  }
 
+//update computer (admin)
 app.put('/update/computer/:computername', verifyToken, async (req, res) => {
     const computername = req.params.computername;
     const { systemworking, available } = req.body;
@@ -118,6 +125,7 @@ app.put('/update/computer/:computername', verifyToken, async (req, res) => {
     }
 });
 
+//view available computer
 async function getAvailableCabins() {
     try {
         const result = await client
@@ -147,6 +155,7 @@ app.get('/available/cabins', async (req, res) => {
     }
 });
 
+// admin create member
 app.post('/create/member', verifyToken, async (req, res) => {
     console.log(req.user);
 
@@ -168,6 +177,7 @@ function createMember(reqcustomername, reqidproof, reqpassword) {
     return "Member account has been created. Welcome YOMOM member!!:D";
 }
 
+//member login
 app.post('/login/member', async (req, res) => {
     try {
         const result = await memberLogin(req.body.idproof, req.body.password);
@@ -197,6 +207,7 @@ async function memberLogin(idproof, password) {
     }
 }
 
+//admin view member
 app.get('/get/member', verifyAdminToken, async (req, res) => {
     try {
         const allMembers = await getAllMembers();
@@ -221,7 +232,7 @@ async function getAllMembers() {
         throw error;
     }
 }
-
+//member create visitor
 app.post('/create/visitor', verifyToken, async (req, res) => {
     try {
         const memberName = req.user.customername;
@@ -267,8 +278,6 @@ async function createVisitor(memberName, visitorName, idProof) {
             "idproof": idProof,
             "cabinno": 0, // You may set default values for other fields as needed
             "entrytime": 0,
-            "payment": 0,
-            "timespend": 0,
         });
 
         return "Visitor account has been created. Welcome to YOMOM Cybercafe! :D";
@@ -278,6 +287,7 @@ async function createVisitor(memberName, visitorName, idProof) {
     }
 }
 
+//view visitor
 app.get('/get/my-visitors', verifyToken, async (req, res) => {
     try {
         const memberName = req.user.customername;
@@ -325,46 +335,34 @@ async function getAllVisitors() {
     }
 }
 
-async function getCustomerOnline() {
+
+app.get('/retrieve/pass/:idproof', async (req, res) => {
     try {
-        const result = await client
-            .db('cybercafe')
-            .collection('customer')
-            .find({ online: 'yes' }, { _id: 0, customername: 1, idproof: 1, cabinno: 1 })
-            .toArray();
-
-        return result.map(customer => ({
-            customername: customer.customername,
-            idproof: customer.idproof,
-            cabinno: customer.cabinno,
-        }));
+      const idproof = req.params.idproof;
+      const visitor = await client
+        .db('cybercafe')
+        .collection('visitor')
+        .findOne({ idproof });
+  
+      if (!visitor) {
+        return res.status(404).send('Visitor not found');
+      }
+  
+      // You can customize the response based on your data structure
+      const passInfo = {
+        visitorname: visitor.visitorname,
+        idproof: visitor.idproof,
+        cabinno: visitor.cabinno,
+        entrytime: visitor.entrytime,
+        createdBy: visitor.createdBy,
+      };
+  
+      res.send(passInfo);
     } catch (error) {
-        console.error(error);
-        res.status(500).send('Internal Server Error');
+      console.error(error);
+      res.status(500).send('Internal Server Error');
     }
-}
-
-app.get('/online/customer/admin', verifyToken, async (req, res) => {
-    try {
-        const onlineCustomer = await getCustomerOnline();
-        res.send(onlineCustomer);
-    } catch (error) {
-        console.error(error);
-        res.status(500).send('Internal Server Error');
-    }
-});
-
-app.get('/view/computer/admin', verifyToken, async (req, res) => {
-    try {
-        const result = await client
-            .db('configure').collection().toArray();
-
-        res.send(result);
-    } catch (error) {
-        console.error(error);
-        res.status(500).send("Internal Server Error");
-    }
-});
+  });
 
 function generateToken(userData) {
     const token = jwt.sign(

@@ -115,40 +115,12 @@
  *         description: Internal Server Error
  *
  * @openapi
- * /view/computer/admin:
- *   get:
- *     summary: View Computer Configuration (Admin Only)
- *     description: Get a list of computer configurations (admin only)
- *     tags:
- *       - Admin
- *     security:
- *       - BearerAuth: []
- *     responses:
- *       '200':
- *         description: A list of computer configurations
- *         content:
- *           application/json:
- *             example:
- *               - computername: 'Computer1'
- *                 systemworking: true
- *                 available: true
- *                 # Include other relevant computer information
- *               - computername: 'Computer2'
- *                 systemworking: false
- *                 available: true
- *                 # Include other relevant computer information
- *       '401':
- *         description: Unauthorized
- *       '500':
- *         description: Internal Server Error
- *
- * @openapi
  * /available/cabins:
  *   get:
  *     summary: View Available Cabins
  *     description: Get a list of available cabins
  *     tags:
- *       - Public
+ *       - Visitor
  *     responses:
  *       '200':
  *         description: Successful operation
@@ -195,7 +167,7 @@
  *     summary: Create Visitor
  *     description: Create a new visitor account
  *     tags:
- *       - Visitor
+ *       - Member
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -218,7 +190,7 @@
  *     summary: Get My Visitors
  *     description: Get a list of visitors created by the member
  *     tags:
- *       - Visitor
+ *       - Member
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -231,6 +203,28 @@
  *                 idproof: 'ABC123'
  *       '401':
  *         description: Unauthorized
+ *       '500':
+ *         description: Internal Server Error
+ *
+ * @swagger
+ * /retrieve/pass/{idproof}:
+ *   get:
+ *     summary: Retrieve visitor pass information
+ *     description: Retrieve pass information for a visitor based on their ID proof
+ *     tags:
+ *       - Visitor
+ *     parameters:
+ *       - in: path
+ *         name: idproof
+ *         required: true
+ *         description: ID proof of the visitor
+ *         schema:
+ *           type: string
+ *     responses:
+ *       '200':
+ *         description: Successful response with visitor pass information
+ *       '404':
+ *         description: Visitor not found
  *       '500':
  *         description: Internal Server Error
  */
