@@ -42,6 +42,9 @@ app.get('/', (req, res) => {
   res.send('welcome to YOMOM');
 });
 
+function clearTokenFromCookie() {
+    document.cookie = 'accessToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'; // Clear the cookie
+  }
 function verifyToken(req, res, next) {
     let header = req.headers.authorization;
 
@@ -69,21 +72,14 @@ function verifyToken(req, res, next) {
         }
 
         req.user = decoded;
-
-        if (req.user.role === 'admin') {
-            next();
-        } else {
-            next();
-        }
     });
 }
-
 
 app.post('/login/admin', (req, res) => {
   login(req.body.username, req.body.password)
     .then(result => {
       if (result.message === 'Access Granted') {
-        const token = generateToken({ username: req.body.username, role: 'admin' });
+        const token = generateToken({ username: req.body.username});
         console.log('Generated Token:', token);
         res.send({ message: 'Successful login', token });
       } else {
@@ -145,6 +141,7 @@ async function getAvailableCabins() {
             cabinno: computer.cabinno,
             computername: computer.computername,
             availability: computer.available,
+            
         }));
     } catch (error) {
         console.error(error);
