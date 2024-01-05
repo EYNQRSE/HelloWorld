@@ -70,30 +70,38 @@ function verifyToken(req, res, next) {
 
         req.user = decoded;
 
+        // Restrict access based on role
         if (req.user.role === 'admin') {
             next();
         } else {
-            next();
-        }
-    });
-}
-function verifyAdminToken(req, res, next) {
-    verifyToken(req, res, function () {
-        console.log('verifyAdminToken: req.user', req.user);  // Log req.user to check its structure
-        if (req.user && req.user.role === 'admin') {
-            next();
-        } else {
-            console.log('verifyAdminToken: Unauthorized');
             res.status(403).send('Forbidden: Admin access required');
         }
     });
 }
+function verifyAdminToken(req, res, next) {
+    verifyToken(req, res)
+        .then(() => {
+            console.log('verifyAdminToken: req.user', req.user);
+            if (req.user && req.user.role === 'admin') {
+                next();
+            } else {
+                console.log('verifyAdminToken: Unauthorized');
+                res.status(403).send('Forbidden: Admin access required');
+            }
+        })
+        .catch(error => {
+            console.error('Error in verifyToken:', error);
+            res.status(500).send('Internal Server Error');
+        });
+}
+
 // admin login
 app.post('/login/admin', (req, res) => {
     login(req.body.username, req.body.password)
       .then(result => {
         if (result.message === 'Access Granted') {
           const token = generateToken({ username: req.body.username, role: 'admin' });
+          console.log('Generated Token:', token)
           res.send({ message: 'Successful login', token });
         } else {
           res.send('Login unsuccessful');
@@ -402,13 +410,6 @@ function generateToken(userData) {
     console.log(token);
     return token;
 }
-
-app.patch('/update/value/:id', async (req, res) => {
-    const search = req.params.id;
-    const value = req.body.value;
-    await client.db().collection().updateOne({ id: search }, { $set: value });
-});
-
 app.listen(port, () => {
     console.log(`Example app listening on port ${port}`);
 });
