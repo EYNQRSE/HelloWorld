@@ -157,7 +157,7 @@ app.get('/available/cabins', async (req, res) => {
 
 // Admin create member
 app.post('/create/member', verifyAdminToken, async (req, res) => {
-    console.log(req.user);
+    console.log(req.user.role === 'admin');
 
     let result = await createMember(
         req.body.memberName,
@@ -221,6 +221,7 @@ async function memberLogin(idproof, password) {
 // Member create visitor
 app.post('/create/visitor', verifyToken, async (req, res) => {
     try {
+        console.log(req.user)
         const memberName = req.user.memberName;
 
         // Call the modified createVisitor function
@@ -261,8 +262,11 @@ async function createVisitor(memberName, visitorName, idProof) {
             "createdBy": memberName,
             "visitorname": visitorName,
             "idproof": idProof,
-            "cabinno": 0,  // You may set default values for other fields as needed
             "entrytime": 0,
+            "cabinno": 0,  
+            "computername": 0,
+            "access": 0,
+            
         });
 
         return "Visitor account has been created. Welcome to YOMOM Cybercafe! :D";

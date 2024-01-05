@@ -46,9 +46,9 @@
  *       content:
  *         application/json:
  *           example:
- *             customername: 'John Doe'
+ *             memberName: 'John Doe'
  *             idproof: 'ABC123'
- *             password: 'customerPassword'
+ *             password: 'memberPassword'
  *             # Add other customer properties
  *     responses:
  *       '200':
@@ -74,7 +74,7 @@
  *         content:
  *           application/json:
  *             example:
- *               - customername: 'John Doe'
+ *               - memberName: 'John Doe'
  *                 idproof: 'ABC123'
  *              
  *       '401':
