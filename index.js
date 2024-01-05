@@ -73,38 +73,45 @@ function verifyToken(req, res, next) {
             return;
         }
 
-        console.log('Decoded Token:', decoded);  // Log decoded token
+        console.log('Decoded Token:', decoded);
 
         // Ensure memberName is present
-        if (!decoded.memberName) {
-            console.error('Member Name not found in the token.');
+        if (!decoded.memberName || !decoded.role) {
+            console.error('Member Name or Role not found in the token.');
             res.status(401).send('Unauthorized');
             return;
         }
 
         req.user = decoded;
+
+        if (req.user.role === 'admin') {
+            next();
+        } else {
+            res.status(403).send('Forbidden: Admin access required');
+        }
     });
 }
 
 app.post('/login/admin', (req, res) => {
-  login(req.body.username, req.body.password)
-    .then(result => {
-      if (result.message === 'Access Granted')
-      {
-        const token = generateToken({ password: req.body.password, role: 'admin', username:result.user.username });
-        console.log('Generated Token:', token);
-        res.send({ message: 'Successful login', token });
-      }
-      else 
-      {
-        res.send('Login unsuccessful');
-      }
-    })
-    .catch(error => {
-      console.error(error);
-      res.status(500).send("Internal Server Error");
-    });
+    login(req.body.username, req.body.password)
+        .then(result => {
+            if (result.message === 'Access Granted') {
+                const token = generateToken({
+                    username: req.body.username,
+                    role: 'admin'
+                });
+                console.log('Generated Token:', token);
+                res.send({ message: 'Successful login', token });
+            } else {
+                res.send('Login unsuccessful');
+            }
+        })
+        .catch(error => {
+            console.error(error);
+            res.status(500).send("Internal Server Error");
+        });
 });
+
 
 async function login(reqUsername, reqPassword) {
     let matchUser = await client.db('cybercafe').collection('admin').findOne({ username: reqUsername });
@@ -296,12 +303,10 @@ async function createVisitor(memberName, visitorName, idProof) {
 //admin view member
 app.get('/get/member', verifyToken, async (req, res) => {
     try {
-        // Check if the user is an admin
         if (req.user.role === 'admin') {
             const allMembers = await getAllMembers();
             res.send(allMembers);
         } else {
-            // Send a response indicating that admin access is required
             res.status(403).send('Forbidden: Admin access required');
         }
     } catch (error) {
