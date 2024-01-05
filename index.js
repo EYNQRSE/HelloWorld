@@ -87,21 +87,10 @@ function verifyToken(req, res, next) {
         if (req.user.role === 'admin') {
             next();
         } else {
-            next();
-        }
-    });
-}
-
-function verifyAdminToken(req, res, next) {
-    verifyToken(req, res, function () {
-        if (req.user && req.user.role === 'admin') {
-            next();
-        } else {
             res.status(403).send('Forbidden: Admin access required');
         }
     });
 }
-
 
 app.post('/login/admin', (req, res) => {
   login(req.body.username, req.body.password)
@@ -308,15 +297,22 @@ async function createVisitor(memberName, visitorName, idProof) {
 }
 
 //admin view member
-app.get('/get/member', verifyAdminToken, async (req, res) => {
+app.get('/get/member', verifyToken, async (req, res) => {
     try {
-        const allMembers = await getAllMembers();
-        res.send(allMembers);
+        // Check if the user is an admin
+        if (req.user.role === 'admin') {
+            const allMembers = await getAllMembers();
+            res.send(allMembers);
+        } else {
+            // Send a response indicating that admin access is required
+            res.status(403).send('Forbidden: Admin access required');
+        }
     } catch (error) {
         console.error(error);
         res.status(500).send('Internal Server Error');
     }
 });
+
 
 async function getAllMembers() {
     try {
