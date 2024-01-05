@@ -4,7 +4,6 @@ const app = express();
 const port = process.env.PORT || 3002;
 app.use(express.json());
 const jwt = require('jsonwebtoken');
-const verifyToken = require('./path/to/verifyToken');
 
 //connect to swagger
 const swaggerUi = require('swagger-ui-express');
@@ -38,73 +37,88 @@ client.connect().then(res => {
   console.log(res);
 });
 
-//token configuration
-function generateToken(userData) {
-    // You should use a secret key for signing the token
-    const secretKey = 'yourSecretKey';
-    // Set the expiration time for the token (e.g., 600 seconds)
-    const expiresIn = 600;
-    // Sign the token with the user data, secret key, and expiration time
-    const token = jwt.sign(userData, secretKey, { expiresIn });
-    return token;
-}
-
-function verifyToken(req, res, next) {
-    // Extract the token from the Authorization header
-    const header = req.headers.authorization;
-  
-    if (!header) {
-      return res.status(401).send('Unauthorized');
-    }
-  
-    const token = header.split(' ')[1];
-  
-    // Verify the token
-    jwt.verify(token, 'yourSecretKey', (err, decoded) => {
-      if (err) {
-        console.error('JWT Verification Error:', err);
-        return res.status(401).send('Unauthorized');
-      }
-  
-      // Ensure the decoded token has the necessary properties
-      if (!decoded.memberName) {
-        console.error('Member Name not found in the token.');
-        return res.status(401).send('Unauthorized');
-      }
-  
-      // Attach the decoded user data to the request object
-      req.user = decoded;
-  
-      // Continue to the next middleware or route handler
-      next();
-    });
+function clearToken(res) {
+    res.clearCookie('accessToken'); // Clear the cookie
   }
+
+app.post('/logout', (req, res) => {
+  // Perform logout operations if needed
+  // ...
+
+  // Clear the token on the client side
+  clearToken(res);
+
+  res.send('Logged out successfully');
+});
 
 //front page
 app.get('/', (req, res) => {
   res.send('welcome to YOMOM');
 });
 
-app.post('/login/admin', (req, res) => {
-    login(req.body.username, req.body.password)
-      .then(result => {
-        if (result.message === 'Access Granted') {
-          // Assuming you have a function generateToken(userData) defined
-          const userData = { username: req.body.username, role: 'admin' };
-          const token = generateToken(userData);
-  
-          // Send the token along with the success message
-          res.send({ message: 'Successful login', token });
-        } else {
-          res.send('Login unsuccessful');
+function verifyToken(req, res, next) {
+    let header = req.headers.authorization;
+
+    if (!header) {
+        res.status(401).send('Unauthorized');
+        return;
+    }
+
+    let token = header.split(' ')[1];
+
+    jwt.verify(token, 'password', function (err, decoded) {
+        if (err) {
+            console.error('JWT Verification Error:', err);
+            res.status(401).send('Unauthorized');
+            return;
         }
-      })
-      .catch(error => {
-        console.error(error);
-        res.status(500).send("Internal Server Error");
-      });
-  });
-  
+
+        console.log('Decoded Token:', decoded);  // Log decoded token
+
+        // Ensure memberName is present
+        if (!decoded.memberName) {
+            console.error('Member Name not found in the token.');
+            res.status(401).send('Unauthorized');
+            return;
+        }
+
+        req.user = decoded;
+
+        if (req.user.role === 'admin') {
+            next();
+        } else {
+            next();
+        }
+    });
+}
+
+function verifyAdminToken(req, res, next) {
+    verifyToken(req, res, function () {
+        if (req.user && req.user.role === 'admin') {
+            next();
+        } else {
+            res.status(403).send('Forbidden: Admin access required');
+        }
+    });
+}
+
+
+app.post('/login/admin', (req, res) => {
+  login(req.body.username, req.body.password)
+    .then(result => {
+      if (result.message === 'Access Granted') {
+        const token = generateToken({ username: req.body.username, role: 'admin' });
+        console.log('Generated Token:', token);
+        res.send({ message: 'Successful login', token });
+      } else {
+        res.send('Login unsuccessful');
+      }
+    })
+    .catch(error => {
+      console.error(error);
+      res.status(500).send("Internal Server Error");
+    });
+});
 
 async function login(reqUsername, reqPassword) {
     let matchUser = await client.db('cybercafe').collection('admin').findOne({ username: reqUsername });
@@ -119,7 +133,8 @@ async function login(reqUsername, reqPassword) {
   }
 
 //update computer (admin)
-app.put('/update/computer/:computername', async (req, res) => {
+app.put('/update/computer/:computername', verifyAdminToken, async (req, res) => {
+    console.log('/update/computer/:computername: req.user', req.user); 
     const computername = req.params.computername;
     const { systemworking, available } = req.body;
 
@@ -172,7 +187,8 @@ app.get('/available/cabins', async (req, res) => {
 });
 
 // Admin create member
-app.post('/create/member', async (req, res) => {
+app.post('/create/member', verifyAdminToken, async (req, res) => {
+    console.log('/create/member: req.user', req.user); 
 
     let result = await createMember(
         req.body.memberName,
@@ -202,7 +218,8 @@ app.post('/login/member', async (req, res) => {
     try {
         const result = await memberLogin(req.body.idproof, req.body.password);
         if (result.message === 'Correct password') {
-            res.send({ message: 'Successful login. Welcome to YOMOM CYBERCAFE'});
+            const token = generateToken({ idproof: req.body.idproof, role: 'member', memberName: result.user.memberName });
+            res.send({ message: 'Successful login. Welcome to YOMOM CYBERCAFE', token });
         } else {
             res.send('Login unsuccessful');
         }
@@ -233,7 +250,7 @@ async function memberLogin(idproof, password) {
 }
 
 // Member create visitor
-app.post('/create/visitor', async (req, res) => {
+app.post('/create/visitor', verifyToken, async (req, res) => {
     try {
         console.log(req.user)
         const membername = req.user.memberName;
@@ -291,7 +308,7 @@ async function createVisitor(memberName, visitorName, idProof) {
 }
 
 //admin view member
-app.get('/get/member', verifyToken, async (req, res) => {
+app.get('/get/member', verifyAdminToken, async (req, res) => {
     try {
         const allMembers = await getAllMembers();
         res.send(allMembers);
@@ -318,7 +335,7 @@ async function getAllMembers() {
 
 
 //view visitor
-app.get('/get/my-visitors', async (req, res) => {
+app.get('/get/my-visitors', verifyToken, async (req, res) => {
     try {
         const memberName = req.user.memberName;
 
@@ -366,8 +383,8 @@ async function getAllVisitors() {
 }
 
 //Admin accepting the visitor pass
-app.put('/retrieving/pass/:visitorname/:idproof', async (req, res) => {
-
+app.put('/retrieving/pass/:visitorname/:idproof', verifyAdminToken, async (req, res) => {
+    console.log('/retrieving/pass/:visitorname/:idproof: req.user', req.user); 
     const visitorname = req.params.visitorname;
     const idproof = req.params.idproof;
 
@@ -389,6 +406,18 @@ app.put('/retrieving/pass/:visitorname/:idproof', async (req, res) => {
         res.status(500).send('Internal Server Error');
     }
 });
+
+function generateToken(userData) {
+    const token = jwt.sign(
+        userData,
+        'password',
+        { expiresIn: 600 }
+    );
+
+    console.log(token);
+
+    return token;
+}
 
 app.listen(port, () => {
     console.log(`Example app listening on port ${port}`);
