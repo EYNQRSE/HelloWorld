@@ -76,7 +76,7 @@ function verifyToken(req, res, next) {
         }
 
         // Continue to the next middleware if the role is either admin or member
-        if (req.user.role === 'admin' || req.user.role === 'member') {
+        if (req.user.role === 'admin' || req.user.role === 'member' || req.user.role === 'test-member') {
             next();
         } else {
             res.status(403).send('Forbidden: Admin or member access required');
