@@ -42,9 +42,9 @@ app.get('/',(req,res) => {
     res.send('welcome to YOMOM');
 });
 
-//function to verify token
 function verifyToken(req, res, next) {
     let header = req.headers.authorization;
+
     if (!header) {
         res.status(401).send('Unauthorized');
         return;
@@ -58,11 +58,26 @@ function verifyToken(req, res, next) {
             res.status(401).send('Unauthorized');
             return;
         }
+
         console.log('Decoded Token:', decoded);  // Log decoded token
+
+        // Ensure memberName is present
+        if (!decoded.memberName) {
+            console.error('Member Name not found in the token.');
+            res.status(401).send('Unauthorized');
+            return;
+        }
+
         req.user = decoded;
-        next();
+
+        if (req.user.role === 'admin') {
+            next();
+        } else {
+            next();
+        }
     });
 }
+
 
 // function for admin token
 function verifyAdminToken(req, res, next) {
@@ -189,7 +204,7 @@ app.post('/login/member', async (req, res) => {
     try {
         const result = await memberLogin(req.body.idproof, req.body.password);
         if (result.message === 'Correct password') {
-            const token = generateToken({ idproof: req.body.idproof, role: 'member' });
+            const token = generateToken({ idproof: req.body.idproof, role: 'member', memberName: result.user.memberName });
             res.send({ message: 'Successful login. Welcome to YOMOM CYBERCAFE', token });
         } else {
             res.send('Login unsuccessful');
@@ -199,6 +214,7 @@ app.post('/login/member', async (req, res) => {
         res.status(500).send('Internal Server Error');
     }
 });
+
 
 async function memberLogin(idproof, password) {
     try {
@@ -262,14 +278,13 @@ async function createVisitor(memberName, visitorName, idProof) {
 
         // If the member has not reached the limit, proceed with creating the visitor
         await client.db('cybercafe').collection('visitor').insertOne({
-            "createdBy": memberName,
-            "visitorname": visitorName,
-            "idproof": idProof,
-            "entrytime": 0,
-            "cabinno": 0,  
-            "computername": 0,
-            "access": 0,
-            
+            createdBy: memberName,
+            visitorname: visitorName,
+            idproof: idProof,
+            entrytime: 0,
+            cabinno: 0,  
+            computername: 0,
+            access: 0,
         });
 
         return "Visitor account has been created. Welcome to YOMOM Cybercafe! :D";
@@ -278,6 +293,7 @@ async function createVisitor(memberName, visitorName, idProof) {
         return "Failed to create visitor account. Please try again later.";
     }
 }
+
 //admin view member
 app.get('/get/member', verifyAdminToken, async (req, res) => {
     try {
