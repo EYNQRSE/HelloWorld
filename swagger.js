@@ -1,21 +1,11 @@
 /**
  * @openapi
- * components:
- *   security:
- *     bearerAuth:
- *       type: http
- *       scheme: bearer
- *       bearerFormat: JWT
- *
- * @openapi
  * /login/admin:
  *   post:
  *     summary: Admin Login
  *     description: Authenticate as an admin and receive an access token
  *     tags: 
  *       - Admin
- *     security:
- *       - BearerAuth: []   # This line specifies the use of the BearerAuth security scheme
  *     requestBody:
  *       content:
  *         application/json:
@@ -41,8 +31,6 @@
  *     description: Create a new member account
  *     tags: 
  *       - Admin
- *     security:
- *       - BearerAuth: []   # This line specifies the use of the BearerAuth security scheme
  *     requestBody:
  *       content:
  *         application/json:
@@ -66,8 +54,6 @@
  *     description: Get a list of all members (admin only)
  *     tags:
  *       - Admin
- *     security:
- *       - BearerAuth: []
  *     responses:
  *       '200':
  *         description: A list of customers
@@ -96,8 +82,6 @@
  *         description: Name of the computer to update
  *         schema:
  *           type: string
- *     security:
- *       - BearerAuth: []
  *     requestBody:
  *       content:
  *         application/json:
@@ -168,8 +152,6 @@
  *     description: Create a new visitor account
  *     tags:
  *       - Member
- *     security:
- *       - BearerAuth: []
  *     requestBody:
  *       content:
  *         application/json:
@@ -191,8 +173,6 @@
  *     description: Get a list of visitors created by the member
  *     tags:
  *       - Member
- *     security:
- *       - BearerAuth: []
  *     responses:
  *       '200':
  *         description: A list of visitors
@@ -213,8 +193,6 @@
  *     description: Retrieve pass information for a visitor based on their name
  *     tags:
  *       - Admin
- *     security:
- *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: visitorname

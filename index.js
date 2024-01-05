@@ -37,79 +37,16 @@ client.connect().then(res => {
   console.log(res);
 });
 
-function clearToken(res) {
-    res.clearCookie('accessToken'); // Clear the cookie
-  }
-
-app.post('/logout', (req, res) => {
-  // Perform logout operations if needed
-  // ...
-
-  // Clear the token on the client side
-  clearToken(res);
-
-  res.send('Logged out successfully');
-});
-
 //front page
 app.get('/', (req, res) => {
   res.send('welcome to YOMOM');
 });
 
-function verifyToken(req, res, next) {
-    let header = req.headers.authorization;
-
-    if (!header) {
-        res.status(401).send('Unauthorized');
-        return;
-    }
-
-    let token = header.split(' ')[1];
-
-    jwt.verify(token, 'password', function (err, decoded) {
-        if (err) {
-            console.error('JWT Verification Error:', err);
-            res.status(401).send('Unauthorized');
-            return;
-        }
-
-        console.log('Decoded Token:', decoded);  // Log decoded token
-
-        // Ensure memberName is present
-        if (!decoded.memberName) {
-            console.error('Member Name not found in the token.');
-            res.status(401).send('Unauthorized');
-            return;
-        }
-
-        req.user = decoded;
-
-        if (req.user.role === 'admin') {
-            next();
-        } else {
-            next();
-        }
-    });
-}
-
-function verifyAdminToken(req, res, next) {
-    verifyToken(req, res, function () {
-        if (req.user && req.user.role === 'admin') {
-            next();
-        } else {
-            res.status(403).send('Forbidden: Admin access required');
-        }
-    });
-}
-
-
 app.post('/login/admin', (req, res) => {
   login(req.body.username, req.body.password)
     .then(result => {
       if (result.message === 'Access Granted') {
-        const token = generateToken({ username: req.body.username, role: 'admin' });
-        console.log('Generated Token:', token);
-        res.send({ message: 'Successful login', token });
+        res.send({ message: 'Successful login'});
       } else {
         res.send('Login unsuccessful');
       }
@@ -133,8 +70,7 @@ async function login(reqUsername, reqPassword) {
   }
 
 //update computer (admin)
-app.put('/update/computer/:computername', verifyAdminToken, async (req, res) => {
-    console.log('/update/computer/:computername: req.user', req.user); 
+app.put('/update/computer/:computername', async (req, res) => {
     const computername = req.params.computername;
     const { systemworking, available } = req.body;
 
@@ -187,8 +123,7 @@ app.get('/available/cabins', async (req, res) => {
 });
 
 // Admin create member
-app.post('/create/member', verifyAdminToken, async (req, res) => {
-    console.log('/create/member: req.user', req.user); 
+app.post('/create/member', async (req, res) => {
 
     let result = await createMember(
         req.body.memberName,
@@ -218,8 +153,7 @@ app.post('/login/member', async (req, res) => {
     try {
         const result = await memberLogin(req.body.idproof, req.body.password);
         if (result.message === 'Correct password') {
-            const token = generateToken({ idproof: req.body.idproof, role: 'member', memberName: result.user.memberName });
-            res.send({ message: 'Successful login. Welcome to YOMOM CYBERCAFE', token });
+            res.send({ message: 'Successful login. Welcome to YOMOM CYBERCAFE'});
         } else {
             res.send('Login unsuccessful');
         }
@@ -250,7 +184,7 @@ async function memberLogin(idproof, password) {
 }
 
 // Member create visitor
-app.post('/create/visitor', verifyToken, async (req, res) => {
+app.post('/create/visitor', async (req, res) => {
     try {
         console.log(req.user)
         const membername = req.user.memberName;
@@ -277,7 +211,7 @@ app.post('/create/visitor', verifyToken, async (req, res) => {
 
 async function createVisitor(memberName, visitorName, idProof) {
     try {
-        console.log('Member Name:', memberName);
+        console.log('MemberName:', memberName);
         // Check the number of visitors created by the member
         const existingVisitorsCount = await client
             .db('cybercafe')
@@ -308,7 +242,7 @@ async function createVisitor(memberName, visitorName, idProof) {
 }
 
 //admin view member
-app.get('/get/member', verifyAdminToken, async (req, res) => {
+app.get('/get/member', async (req, res) => {
     try {
         const allMembers = await getAllMembers();
         res.send(allMembers);
@@ -335,7 +269,7 @@ async function getAllMembers() {
 
 
 //view visitor
-app.get('/get/my-visitors', verifyToken, async (req, res) => {
+app.get('/get/my-visitors', async (req, res) => {
     try {
         const memberName = req.user.memberName;
 
@@ -383,8 +317,8 @@ async function getAllVisitors() {
 }
 
 //Admin accepting the visitor pass
-app.put('/retrieving/pass/:visitorname/:idproof', verifyAdminToken, async (req, res) => {
-    console.log('/retrieving/pass/:visitorname/:idproof: req.user', req.user); 
+app.put('/retrieving/pass/:visitorname/:idproof', async (req, res) => {
+
     const visitorname = req.params.visitorname;
     const idproof = req.params.idproof;
 
@@ -406,18 +340,6 @@ app.put('/retrieving/pass/:visitorname/:idproof', verifyAdminToken, async (req, 
         res.status(500).send('Internal Server Error');
     }
 });
-
-function generateToken(userData) {
-    const token = jwt.sign(
-        userData,
-        'password',
-        { expiresIn: 600 }
-    );
-
-    console.log(token);
-
-    return token;
-}
 
 app.listen(port, () => {
     console.log(`Example app listening on port ${port}`);
