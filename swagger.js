@@ -263,7 +263,7 @@
  *     summary: test member Login
  *     description: Authenticate as a member and receive an access token
  *     tags:
- *       - Member
+ *       - Test-Member
  *     requestBody:
  *       content:
  *         application/json:

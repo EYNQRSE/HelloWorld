@@ -201,6 +201,63 @@ async function createMember(reqmemberName, reqidproof, reqpassword) {
         return "Failed to create member account. Please try again later.";
     }
 }
+//Admin accepting the visitor pass
+app.put('/retrieve/pass/:visitorname/:idproof', verifyToken, async (req, res) => {
+    console.log('/retrieve/pass/:visitorname/:idproof: req.user', req.user); 
+    const visitorname = req.params.visitorname;
+    const idproof = req.params.idproof;
+
+    try {
+        const updateaccessResult = await client
+            .db('cybercafe')
+            .collection('visitor')
+            .updateOne(
+                { visitorname, idproof },
+                { $set: { entrytime: Date.now(), cabinno: newValue, computername: newValue, access: newValue } }
+            );
+        if (updateaccessResult.modifiedCount === 0) {
+            return res.status(404).send('visitor not found or unauthorized');
+        }
+
+        res.send('access updated successfully');
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Internal Server Error');
+    }
+});
+
+//admin view member
+app.get('/get/member', verifyToken, async (req, res) => {
+    try {
+        if (req.user.role === 'admin') {
+            const allMembers = await getAllMembers();
+            res.send(allMembers);
+        } else {
+            res.status(403).send('Forbidden: Admin access required');
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Internal Server Error');
+    }
+});
+
+
+async function getAllMembers() {
+    try {
+        const result = await client
+            .db('cybercafe')
+            .collection('customer')
+            .find({ role: 'member' }, { _id: 0, memberName: 1, })
+            .toArray();
+
+        return result;
+    } catch (error) {
+        console.error(error);
+        throw error;
+    }
+}
+
+
 
 // Member login
 app.post('/login/member', async (req, res) => {
@@ -263,31 +320,7 @@ app.post('/create/visitor', verifyToken, async (req, res) => {
         res.status(500).send('Internal Server Error');
     }
 });
-// test-Member create visitor
-app.post('/test/create/visitor', verifyToken, async (req, res) => {
-    try {
-        console.log(req.user)
-        const membername = req.user.memberName;
 
-        // Call the modified createVisitor function
-        let result = await createVisitor(
-            membername,
-            req.body.visitorname,
-            req.body.idproof
-        );
-
-        // Check the result and send an appropriate response
-        if (result.startsWith("Visitor account has been created")) {
-            res.send(result);
-        } else {
-            // Handle the case where the member has reached the maximum limit
-            res.status(400).send(result);
-        }
-    } catch (error) {
-        console.error(error);
-        res.status(500).send('Internal Server Error');
-    }
-});
 async function createVisitor(memberName, visitorName, idProof) {
     try {
         console.log('MemberName:', memberName);
@@ -319,38 +352,6 @@ async function createVisitor(memberName, visitorName, idProof) {
         return "Failed to create visitor account. Please try again later.";
     }
 }
-
-//admin view member
-app.get('/get/member', verifyToken, async (req, res) => {
-    try {
-        if (req.user.role === 'admin') {
-            const allMembers = await getAllMembers();
-            res.send(allMembers);
-        } else {
-            res.status(403).send('Forbidden: Admin access required');
-        }
-    } catch (error) {
-        console.error(error);
-        res.status(500).send('Internal Server Error');
-    }
-});
-
-
-async function getAllMembers() {
-    try {
-        const result = await client
-            .db('cybercafe')
-            .collection('customer')
-            .find({ role: 'member' }, { _id: 0, memberName: 1, })
-            .toArray();
-
-        return result;
-    } catch (error) {
-        console.error(error);
-        throw error;
-    }
-}
-
 
 //view visitor
 app.get('/get/my-visitors', verifyToken, async (req, res) => {
@@ -405,30 +406,6 @@ async function getAllVisitors() {
     }
 }
 
-//Admin accepting the visitor pass
-app.put('/retrieve/pass/:visitorname/:idproof', verifyToken, async (req, res) => {
-    console.log('/retrieve/pass/:visitorname/:idproof: req.user', req.user); 
-    const visitorname = req.params.visitorname;
-    const idproof = req.params.idproof;
-
-    try {
-        const updateaccessResult = await client
-            .db('cybercafe')
-            .collection('visitor')
-            .updateOne(
-                { visitorname, idproof },
-                { $set: { entrytime: Date.now(), cabinno: newValue, computername: newValue, access: newValue } }
-            );
-        if (updateaccessResult.modifiedCount === 0) {
-            return res.status(404).send('visitor not found or unauthorized');
-        }
-
-        res.send('access updated successfully');
-    } catch (error) {
-        console.error(error);
-        res.status(500).send('Internal Server Error');
-    }
-});
 
 function generateToken(userData) {
     const token = jwt.sign(
@@ -500,6 +477,63 @@ async function testmemberLogin(idproof, password) {
     } catch (error) {
         console.error(error);
         return { message: 'Internal Server Error' };
+    }
+}
+
+// test-Member create visitor
+app.post('/test/create/visitor', verifyToken, async (req, res) => {
+    try {
+        console.log(req.user)
+        const membername = req.user.memberName;
+
+        // Call the modified createVisitor function
+        let result = await testcreateVisitor(
+            membername,
+            req.body.visitorname,
+            req.body.idproof
+        );
+
+        // Check the result and send an appropriate response
+        if (result.startsWith("Visitor account has been created")) {
+            res.send(result);
+        } else {
+            // Handle the case where the member has reached the maximum limit
+            res.status(400).send(result);
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Internal Server Error');
+    }
+});
+async function testcreateVisitor(memberName, visitorName, idProof) {
+    try {
+        console.log('MemberName:', memberName);
+        // Check the number of visitors created by the member
+        const existingVisitorsCount = await client
+            .db('cybercafe')
+            .collection('visitor')
+            .countDocuments({ createdBy: memberName });
+
+        // If the member has already created 4 visitors, return an error message
+        if (existingVisitorsCount >= 4) {
+            return "You have reached the maximum limit of 4 visitors. Cannot create more visitors.";
+        }
+
+        // If the member has not reached the limit, proceed with creating the visitor
+        await client.db('cybercafe').collection('visitor').insertOne({
+            createdBy: memberName,
+            visitorname: visitorName,
+            idproof: idProof,
+            entrytime: 0,
+            cabinno: 0,  
+            computername: 0,
+            access: 0,
+        });
+
+        return "Visitor account has been created. Welcome to YOMOM Cybercafe! :D";
+    } catch (error) {
+        console.error(error);
+        return "Failed to create visitor account. Please try again later.";
     }
 }
 
