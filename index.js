@@ -77,14 +77,13 @@ function verifyToken(req, res, next) {
         }
     });
 }
-
-
-// function for admin token
 function verifyAdminToken(req, res, next) {
     verifyToken(req, res, function () {
+        console.log('verifyAdminToken: req.user', req.user);  // Log req.user to check its structure
         if (req.user && req.user.role === 'admin') {
             next();
         } else {
+            console.log('verifyAdminToken: Unauthorized');
             res.status(403).send('Forbidden: Admin access required');
         }
     });
@@ -120,11 +119,11 @@ async function login(reqUsername, reqPassword) {
 
 //update computer (admin)
 app.put('/update/computer/:computername', verifyAdminToken, async (req, res) => {
+    console.log('/update/computer/:computername: req.user', req.user); 
     const computername = req.params.computername;
     const { systemworking, available } = req.body;
 
     try {
-        console.log(req.user)
         const updatecomputerResult = await client
             .db('configure')
             .collection('computer')
@@ -174,7 +173,7 @@ app.get('/available/cabins', async (req, res) => {
 
 // Admin create member
 app.post('/create/member', verifyAdminToken, async (req, res) => {
-    console.log(req.user.role === 'admin');
+    console.log('/create/member: req.user', req.user); 
 
     let result = await createMember(
         req.body.memberName,
@@ -371,6 +370,7 @@ async function getAllVisitors() {
 
 //Admin accepting the visitor pass
 app.put('/retrieving/pass/:visitorname/:idproof', verifyAdminToken, async (req, res) => {
+    console.log('/retrieving/pass/:visitorname/:idproof: req.user', req.user); 
     const visitorname = req.params.visitorname;
     const idproof = req.params.idproof;
 
