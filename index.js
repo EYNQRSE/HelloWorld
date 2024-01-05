@@ -36,8 +36,6 @@ const client = new MongoClient(uri, {
 client.connect().then(res => {
   console.log(res);
 });
-const verifyAdminToken = require('./path/to/verifyAdminToken');
-const verifyToken = require('./path/to/verifyToken');
 
 //front page
 app.get('/', (req, res) => {
@@ -80,16 +78,6 @@ function verifyToken(req, res, next) {
     });
 }
 
-function verifyAdminToken(req, res, next) {
-    verifyToken(req, res, function () {
-        if (req.user && req.user.role === 'admin') {
-            next();
-        } else {
-            res.status(403).send('Forbidden: Admin access required');
-        }
-    });
-}
-
 
 app.post('/login/admin', (req, res) => {
   login(req.body.username, req.body.password)
@@ -121,7 +109,7 @@ async function login(reqUsername, reqPassword) {
   }
 
 //update computer (admin)
-app.put('/update/computer/:computername', verifyAdminToken, async (req, res) => {
+app.put('/update/computer/:computername', verifyToken, async (req, res) => {
     console.log('/update/computer/:computername: req.user', req.user); 
     const computername = req.params.computername;
     const { systemworking, available } = req.body;
@@ -175,7 +163,7 @@ app.get('/available/cabins', async (req, res) => {
 });
 
 // Admin create member
-app.post('/create/member', verifyAdminToken, async (req, res) => {
+app.post('/create/member', verifyToken, async (req, res) => {
     console.log('/create/member: req.user', req.user); 
 
     let result = await createMember(
@@ -296,7 +284,7 @@ async function createVisitor(memberName, visitorName, idProof) {
 }
 
 //admin view member
-app.get('/get/member', verifyAdminToken, async (req, res) => {
+app.get('/get/member', verifyToken, async (req, res) => {
     try {
         const allMembers = await getAllMembers();
         res.send(allMembers);
@@ -371,7 +359,7 @@ async function getAllVisitors() {
 }
 
 //Admin accepting the visitor pass
-app.put('/retrieving/pass/:visitorname/:idproof', verifyAdminToken, async (req, res) => {
+app.put('/retrieving/pass/:visitorname/:idproof', verifyToken, async (req, res) => {
     console.log('/retrieving/pass/:visitorname/:idproof: req.user', req.user); 
     const visitorname = req.params.visitorname;
     const idproof = req.params.idproof;
