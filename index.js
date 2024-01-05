@@ -89,8 +89,8 @@ function verifyToken(req, res, next) {
 app.post('/login/admin', (req, res) => {
   login(req.body.username, req.body.password)
     .then(result => {
-      if (result.message === 'Access Granted') {
-        const token = generateToken({ username: req.body.username, role: 'admin' });
+      if (result.message === 'Access Granted')
+        const token = generateToken({ password: req.body.password, role: 'admin', username:result.user.username });
         console.log('Generated Token:', token);
         res.send({ message: 'Successful login', token });
       } else {
