@@ -201,49 +201,16 @@ async function createMember(reqmemberName, reqidproof, reqpassword) {
         return "Failed to create member account. Please try again later.";
     }
 }
-// test create member
-app.post('/test/create/member', async (req, res) => {
-
-    let result = await testcreateMember(
-        req.body.memberName,
-        req.body.idproof,
-        req.body.password
-    );
-    res.send(result);
-});
-
-async function testcreateMember(reqmemberName, reqidproof, reqpassword) {
-    try {
-        await client.db('cybercafe').collection('customer').insertOne({
-            "memberName": reqmemberName,
-            "idproof": reqidproof,
-            "password": reqpassword,  // Consider hashing and salting the password
-            "role": "test-member"
-        });
-        return "Test Member account has been created. Welcome YOMOM member!!:D";
-    } catch (error) {
-        console.error(error);
-        return "Failed to create member account. Please try again later.";
-    }
-}
 
 // Member login
 app.post('/login/member', async (req, res) => {
     try {
         const result = await memberLogin(req.body.idproof, req.body.password);
-        if(req.user.role === 'test-member'){
-            if (result.message === 'Correct password') {
-                res.send({ message: 'Successful login. Welcome to YOMOM CYBERCAFE'});
-            } else {
-                res.send('Login unsuccessful');
-        }}
-        else {
-            if (result.message === 'Correct password') {
-                const token = generateToken({ idproof: req.body.idproof, role: 'member', memberName: result.user.memberName });
-                res.send({ message: 'Successful login. Welcome to YOMOM CYBERCAFE', token });
-            } else {
-                res.send('Login unsuccessful');
-            }
+        if (result.message === 'Correct password') {
+            const token = generateToken({ idproof: req.body.idproof, role: 'member', memberName: result.user.memberName });
+            res.send({ message: 'Successful login. Welcome to YOMOM CYBERCAFE', token });
+        } else {
+            res.send('Login unsuccessful');
         }
     } catch (error) {
         console.error(error);
@@ -393,7 +360,12 @@ app.get('/get/my-visitors', verifyToken, async (req, res) => {
         if (req.user.role === 'admin') {
             const allVisitors = await getAllVisitors();
             res.send(allVisitors);
-        } else {
+        }
+        else if(req.user.role === 'test-member'){
+            const visitors = await getVisitorsCreatedByMember(memberName);
+            res.send(visitors);
+        } 
+        else {
             const visitors = await getVisitorsCreatedByMember(memberName);
             res.send(visitors);
         }
@@ -469,6 +441,68 @@ function generateToken(userData) {
 
     return token;
 }
+// test create member
+app.post('/test/create/member', async (req, res) => {
+
+    let result = await testcreateMember(
+        req.body.memberName,
+        req.body.idproof,
+        req.body.password
+    );
+    res.send(result);
+});
+
+async function testcreateMember(reqmemberName, reqidproof, reqpassword) {
+    try {
+        await client.db('cybercafe').collection('customer').insertOne({
+            "memberName": reqmemberName,
+            "idproof": reqidproof,
+            "password": reqpassword,  // Consider hashing and salting the password
+            "role": "test-member"
+        });
+        return "Test Member account has been created. Welcome YOMOM member!!:D";
+    } catch (error) {
+        console.error(error);
+        return "Failed to create member account. Please try again later.";
+    }
+}
+
+// test Member login
+app.post('/test/login/member', async (req, res) => {
+    try {
+        const result = await testmemberLogin(req.body.idproof, req.body.password);
+        if (result.message === 'Correct password') {
+            const token = generateToken({ idproof: req.body.idproof, role: 'test-member', memberName: result.user.memberName });
+            res.send({ message: 'Successful login. Welcome to YOMOM CYBERCAFE', token });
+        } else {
+            res.send('Login unsuccessful');
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Internal Server Error');
+    }
+});
+
+async function testmemberLogin(idproof, password) {
+    try {
+        let matchUser = await client.db('cybercafe').collection('customer').findOne({ idproof: idproof });
+
+        if (!matchUser) {
+            return { message: 'User not found!' };
+        }
+
+        // Consider using a library like bcrypt to compare hashed passwords
+        if (matchUser.password === password) {
+            return { message: 'Correct password', user: matchUser };
+        } else {
+            return { message: 'Invalid password' };
+        }
+    } catch (error) {
+        console.error(error);
+        return { message: 'Internal Server Error' };
+    }
+}
+
 
 app.listen(port, () => {
     console.log(`Example app listening on port ${port}`);
