@@ -4,6 +4,7 @@ const app = express();
 const port = process.env.PORT || 3002;
 app.use(express.json());
 const jwt = require('jsonwebtoken');
+const verifyToken = require('./path/to/verifyToken');
 
 //connect to swagger
 const swaggerUi = require('swagger-ui-express');
@@ -37,25 +38,73 @@ client.connect().then(res => {
   console.log(res);
 });
 
+//token configuration
+function generateToken(userData) {
+    // You should use a secret key for signing the token
+    const secretKey = 'yourSecretKey';
+    // Set the expiration time for the token (e.g., 600 seconds)
+    const expiresIn = 600;
+    // Sign the token with the user data, secret key, and expiration time
+    const token = jwt.sign(userData, secretKey, { expiresIn });
+    return token;
+}
+
+function verifyToken(req, res, next) {
+    // Extract the token from the Authorization header
+    const header = req.headers.authorization;
+  
+    if (!header) {
+      return res.status(401).send('Unauthorized');
+    }
+  
+    const token = header.split(' ')[1];
+  
+    // Verify the token
+    jwt.verify(token, 'yourSecretKey', (err, decoded) => {
+      if (err) {
+        console.error('JWT Verification Error:', err);
+        return res.status(401).send('Unauthorized');
+      }
+  
+      // Ensure the decoded token has the necessary properties
+      if (!decoded.memberName) {
+        console.error('Member Name not found in the token.');
+        return res.status(401).send('Unauthorized');
+      }
+  
+      // Attach the decoded user data to the request object
+      req.user = decoded;
+  
+      // Continue to the next middleware or route handler
+      next();
+    });
+  }
+
 //front page
 app.get('/', (req, res) => {
   res.send('welcome to YOMOM');
 });
 
 app.post('/login/admin', (req, res) => {
-  login(req.body.username, req.body.password)
-    .then(result => {
-      if (result.message === 'Access Granted') {
-        res.send({ message: 'Successful login'});
-      } else {
-        res.send('Login unsuccessful');
-      }
-    })
-    .catch(error => {
-      console.error(error);
-      res.status(500).send("Internal Server Error");
-    });
-});
+    login(req.body.username, req.body.password)
+      .then(result => {
+        if (result.message === 'Access Granted') {
+          // Assuming you have a function generateToken(userData) defined
+          const userData = { username: req.body.username, role: 'admin' };
+          const token = generateToken(userData);
+  
+          // Send the token along with the success message
+          res.send({ message: 'Successful login', token });
+        } else {
+          res.send('Login unsuccessful');
+        }
+      })
+      .catch(error => {
+        console.error(error);
+        res.status(500).send("Internal Server Error");
+      });
+  });
+  
 
 async function login(reqUsername, reqPassword) {
     let matchUser = await client.db('cybercafe').collection('admin').findOne({ username: reqUsername });
@@ -242,7 +291,7 @@ async function createVisitor(memberName, visitorName, idProof) {
 }
 
 //admin view member
-app.get('/get/member', async (req, res) => {
+app.get('/get/member', verifyToken, async (req, res) => {
     try {
         const allMembers = await getAllMembers();
         res.send(allMembers);
