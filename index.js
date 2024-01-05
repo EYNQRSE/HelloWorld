@@ -60,37 +60,33 @@ function verifyToken(req, res, next) {
     let header = req.headers.authorization;
 
     if (!header) {
-        res.status(401).send('Unauthorized');
-        return;
+        return res.status(401).send('Unauthorized');
     }
 
     let token = header.split(' ')[1];
 
-    jwt.verify(token, 'password', function (err, decoded) {
-        if (err) {
-            console.error('JWT Verification Error:', err);
-            res.status(401).send('Unauthorized');
-            return;
-        }
-
-        console.log('Decoded Token:', decoded);
-
-        // Ensure memberName is present
-        if (!decoded.memberName || !decoded.role) {
-            console.error('Member Name or Role not found in the token.');
-            res.status(401).send('Unauthorized');
-            return;
-        }
-
+    try {
+        let decoded = jwt.verify(token, 'password');
         req.user = decoded;
 
-        if (req.user.role === 'admin') {
+        // Ensure role is present in the token
+        if (!req.user.role) {
+            console.error('Role not found in the token.');
+            return res.status(401).send('Unauthorized');
+        }
+
+        // Continue to the next middleware if the role is either admin or member
+        if (req.user.role === 'admin' || req.user.role === 'member') {
             next();
         } else {
-            res.status(403).send('Forbidden: Admin access required');
+            res.status(403).send('Forbidden: Admin or member access required');
         }
-    });
+    } catch (err) {
+        console.error('JWT Verification Error:', err);
+        res.status(401).send('Unauthorized');
+    }
 }
+
 
 app.post('/login/admin', (req, res) => {
     login(req.body.username, req.body.password)
