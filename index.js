@@ -54,9 +54,11 @@ function verifyToken(req, res, next) {
 
     jwt.verify(token, 'password', function (err, decoded) {
         if (err) {
+            console.error('JWT Verification Error:', err);
             res.status(401).send('Unauthorized');
             return;
         }
+        console.log('Decoded Token:', decoded);  // Log decoded token
         req.user = decoded;
         next();
     });
@@ -222,11 +224,11 @@ async function memberLogin(idproof, password) {
 app.post('/create/visitor', verifyToken, async (req, res) => {
     try {
         console.log(req.user)
-        const memberName = req.user.memberName;
+        const membername = req.user.memberName;
 
         // Call the modified createVisitor function
         let result = await createVisitor(
-            memberName,
+            membername,
             req.body.visitorname,
             req.body.idproof
         );
@@ -246,6 +248,7 @@ app.post('/create/visitor', verifyToken, async (req, res) => {
 
 async function createVisitor(memberName, visitorName, idProof) {
     try {
+        console.log('Member Name:', memberName);
         // Check the number of visitors created by the member
         const existingVisitorsCount = await client
             .db('cybercafe')
