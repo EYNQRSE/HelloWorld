@@ -2,10 +2,10 @@
  * @openapi
  * components:
  *   securitySchemes:
- *     bearerAuth:
+ *     BearerAuth:
  *       type: http
  *       scheme: bearer
- *       bearerFormat: JWT
+ *       BearerFormat: JWT
  *
  * @openapi
  * /login/admin:
@@ -14,7 +14,7 @@
  *     description: Authenticate as an admin and receive an access token
  *     tags: 
  *       - Admin
- *     securitySchemes:
+ *     security:
  *       - BearerAuth: []   # This line specifies the use of the BearerAuth security scheme
  *     requestBody:
  *       content:

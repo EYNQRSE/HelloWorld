@@ -58,6 +58,16 @@ function verifyToken(req, res, next) {
             res.status(401).send('Unauthorized');
             return;
         }
+
+        console.log('Decoded Token:', decoded);  // Log decoded token
+
+        // Ensure memberName is present
+        if (!decoded.memberName) {
+            console.error('Member Name not found in the token.');
+            res.status(401).send('Unauthorized');
+            return;
+        }
+
         req.user = decoded;
     });
 }
