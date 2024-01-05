@@ -82,6 +82,8 @@ function verifyToken(req, res, next) {
 
         // Restrict access based on role
         if (req.user.role === 'admin') {
+            // Set the token in a cookie
+            generateToken(decoded, res);
             next();
         } else {
             res.status(403).send('Forbidden: Admin access required');
@@ -89,17 +91,16 @@ function verifyToken(req, res, next) {
     });
 }
 function verifyAdminToken(req, res, next) {
-    verifyToken(req, res);
-    
-    console.log('verifyAdminToken: req.user', req.user);
-    if (req.user && req.user.role === 'admin') {
-        next();
-    } else {
-        console.log('verifyAdminToken: Unauthorized');
-        res.status(403).send('Forbidden: Admin access required');
-    }
+    verifyToken(req, res, function () {
+        console.log('verifyAdminToken: req.user', req.user);
+        if (req.user && req.user.role === 'admin') {
+            next();
+        } else {
+            console.log('verifyAdminToken: Unauthorized');
+            res.status(403).send('Forbidden: Admin access required');
+        }
+    });
 }
-
 
 app.post('/login/admin', (req, res) => {
     login(req.body.username, req.body.password)
@@ -399,9 +400,10 @@ app.put('/retrieving/pass/:visitorname/:idproof', verifyAdminToken, async (req, 
         const updateaccessResult = await client
             .db('cybercafe')
             .collection('visitor')
-            .updateOne({ visitorname,idproof },
-                { $set: { entrytime,cabinno,computername,access } });
-
+            .updateOne(
+                { visitorname, idproof },
+                { $set: { entrytime: newValue, cabinno: newValue, computername: newValue, access: newValue } }
+            );
         if (updateaccessResult.modifiedCount === 0) {
             return res.status(404).send('visitor not found or unauthorized');
         }
