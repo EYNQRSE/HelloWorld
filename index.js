@@ -122,7 +122,7 @@ async function login(reqUsername, reqPassword) {
   }
 
 //update computer (admin)
-app.put('/update/computer/:computername', verifyAdminToken, async (req, res) => {
+app.put('/update/computer/:computername', verifyToken, async (req, res) => {
     console.log('/update/computer/:computername: req.user', req.user); 
     const computername = req.params.computername;
     const { systemworking, available } = req.body;
@@ -176,7 +176,7 @@ app.get('/available/cabins', async (req, res) => {
 });
 
 // Admin create member
-app.post('/create/member', verifyAdminToken, async (req, res) => {
+app.post('/create/member', verifyToken, async (req, res) => {
     console.log('/create/member: req.user', req.user); 
 
     let result = await createMember(
@@ -379,7 +379,7 @@ async function getAllVisitors() {
 }
 
 //Admin accepting the visitor pass
-app.put('/retrieving/pass/:visitorname/:idproof', verifyAdminToken, async (req, res) => {
+app.put('/retrieving/pass/:visitorname/:idproof', verifyToken, async (req, res) => {
     console.log('/retrieving/pass/:visitorname/:idproof: req.user', req.user); 
     const visitorname = req.params.visitorname;
     const idproof = req.params.idproof;
