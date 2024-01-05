@@ -1,30 +1,12 @@
 /**
  * @openapi
  * components:
- *   securitySchemes:
+ *   security:
  *     bearerAuth:
  *       type: http
  *       scheme: bearer
  *       bearerFormat: JWT
  *
- * @openapi
- *   /logout:
- *   post:
- *     summary: Logout
- *     description: Perform user logout and clear the access token.
- *     tags:
- *       - Authentication
- *     responses:
- *       '200':
- *         description: Successfully logged out
- *       '500':
- *         description: Internal Server Error
- *    components:
- *     securitySchemes:
- *        bearerAuth:
- *        type: http
- *        scheme: bearer
- *        bearerFormat: JWT
  * @openapi
  * /login/admin:
  *   post:
