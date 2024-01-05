@@ -220,11 +220,14 @@
  *         name: visitorname
  *         required: true
  *         description: Name of the visitor
+ *         name: idproof
+ *         required: true
+ *         description: Idproof of the member
  *         schema:
  *           type: string
  *     responses:
  *       '200':
- *         description: Successful response with visitor pass information
+ *         description: Successful retrieve visitor pass
  *       '404':
  *         description: Visitor not found
  *       '500':

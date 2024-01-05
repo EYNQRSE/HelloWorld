@@ -155,11 +155,11 @@ app.get('/available/cabins', async (req, res) => {
     }
 });
 
-// admin create member
+// Admin create member
 app.post('/create/member', verifyAdminToken, async (req, res) => {
     console.log(req.user);
 
-    let result = createMember(
+    let result = await createMember(
         req.body.memberName,
         req.body.idproof,
         req.body.password
@@ -167,17 +167,22 @@ app.post('/create/member', verifyAdminToken, async (req, res) => {
     res.send(result);
 });
 
-function createMember(reqmemberName, reqidproof, reqpassword) {
-    client.db('cybercafe').collection('customer').insertOne({
-        "membername": reqmemberName,
-        "idproof": reqidproof,
-        "password": reqpassword,
-        "role": "member"
-    });
-    return "Member account has been created. Welcome YOMOM member!!:D";
+async function createMember(reqmemberName, reqidproof, reqpassword) {
+    try {
+        await client.db('cybercafe').collection('customer').insertOne({
+            "memberName": reqmemberName,
+            "idproof": reqidproof,
+            "password": reqpassword,  // Consider hashing and salting the password
+            "role": "member"
+        });
+        return "Member account has been created. Welcome YOMOM member!!:D";
+    } catch (error) {
+        console.error(error);
+        return "Failed to create member account. Please try again later.";
+    }
 }
 
-//member login
+// Member login
 app.post('/login/member', async (req, res) => {
     try {
         const result = await memberLogin(req.body.idproof, req.body.password);
@@ -194,19 +199,78 @@ app.post('/login/member', async (req, res) => {
 });
 
 async function memberLogin(idproof, password) {
-    let matchUser = await client.db('cybercafe').collection('customer').findOne({ idproof: { $eq: idproof } });
+    try {
+        let matchUser = await client.db('cybercafe').collection('customer').findOne({ idproof: idproof });
 
-    if (!matchUser) {
-        return { message: 'User not found!' };
-    }
+        if (!matchUser) {
+            return { message: 'User not found!' };
+        }
 
-    if (matchUser.password === password) {
-        return { message: 'Correct password', user: matchUser };
-    } else {
-        return { message: 'Invalid password' };
+        // Consider using a library like bcrypt to compare hashed passwords
+        if (matchUser.password === password) {
+            return { message: 'Correct password', user: matchUser };
+        } else {
+            return { message: 'Invalid password' };
+        }
+    } catch (error) {
+        console.error(error);
+        return { message: 'Internal Server Error' };
     }
 }
 
+// Member create visitor
+app.post('/create/visitor', verifyToken, async (req, res) => {
+    try {
+        const memberName = req.user.memberName;
+
+        // Call the modified createVisitor function
+        let result = await createVisitor(
+            memberName,
+            req.body.visitorname,
+            req.body.idproof
+        );
+
+        // Check the result and send an appropriate response
+        if (result.startsWith("Visitor account has been created")) {
+            res.send(result);
+        } else {
+            // Handle the case where the member has reached the maximum limit
+            res.status(400).send(result);
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Internal Server Error');
+    }
+});
+
+async function createVisitor(memberName, visitorName, idProof) {
+    try {
+        // Check the number of visitors created by the member
+        const existingVisitorsCount = await client
+            .db('cybercafe')
+            .collection('visitor')
+            .countDocuments({ createdBy: memberName });
+
+        // If the member has already created 4 visitors, return an error message
+        if (existingVisitorsCount >= 4) {
+            return "You have reached the maximum limit of 4 visitors. Cannot create more visitors.";
+        }
+
+        // If the member has not reached the limit, proceed with creating the visitor
+        await client.db('cybercafe').collection('visitor').insertOne({
+            "createdBy": memberName,
+            "visitorname": visitorName,
+            "idproof": idProof,
+            "cabinno": 0,  // You may set default values for other fields as needed
+            "entrytime": 0,
+        });
+
+        return "Visitor account has been created. Welcome to YOMOM Cybercafe! :D";
+    } catch (error) {
+        console.error(error);
+        return "Failed to create visitor account. Please try again later.";
+    }
+}
 //admin view member
 app.get('/get/member', verifyAdminToken, async (req, res) => {
     try {
@@ -232,54 +296,7 @@ async function getAllMembers() {
         throw error;
     }
 }
-//member create visitor
-app.post('/create/visitor', verifyToken, async (req, res) => {
-    try {
-        const memberName = req.user.memberName;
 
-        // Call the modified createVisitor function
-        let result = await createVisitor(
-            memberName,
-            req.body.visitorname,
-            req.body.idproof
-        );
-
-        // Check the result and send appropriate response
-        if (result.startsWith("Visitor account has been created")) {
-            res.send(result);
-        } else {
-            // Handle the case where the member has reached the maximum limit
-            res.status(400).send(result);
-        }
-    } catch (error) {
-        console.error(error);
-        res.status(500).send('Internal Server Error');
-    }
-});
-
-
-async function createVisitor(memberName, visitorName, idProof) {
-    try {
-        // Check the number of visitors created by the member
-        const existingVisitorsCount = await client
-            .db('cybercafe')
-            .collection('visitor')
-            .countDocuments({ createdBy: memberName });
-
-        const result = await client.db('cybercafe').collection('visitor').insertOne({
-            "createdBy": memberName,
-            "visitorname": visitorName,
-            "idproof": idProof,
-            "cabinno": 0, // You may set default values for other fields as needed
-            "entrytime": 0,
-        });
-
-        return "Visitor account has been created. Welcome to YOMOM Cybercafe! :D";
-    } catch (error) {
-        console.error(error);
-        return "Failed to create visitor account. Please try again later.";
-    }
-}
 
 //view visitor
 app.get('/get/my-visitors', verifyToken, async (req, res) => {
