@@ -83,12 +83,6 @@ function verifyToken(req, res, next) {
         }
 
         req.user = decoded;
-
-        if (req.user.role === 'admin') {
-            next();
-        } else {
-            res.status(403).send('Forbidden: Admin access required');
-        }
     });
 }
 
