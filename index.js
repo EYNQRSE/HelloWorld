@@ -42,9 +42,6 @@ app.get('/', (req, res) => {
   res.send('welcome to YOMOM');
 });
 
-function clearTokenFromCookie() {
-    document.cookie = 'accessToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'; // Clear the cookie
-  }
 function verifyToken(req, res, next) {
     let header = req.headers.authorization;
 
@@ -61,16 +58,6 @@ function verifyToken(req, res, next) {
             res.status(401).send('Unauthorized');
             return;
         }
-
-        console.log('Decoded Token:', decoded);  // Log decoded token
-
-        // Ensure memberName is present
-        if (!decoded.memberName) {
-            console.error('Member Name not found in the token.');
-            res.status(401).send('Unauthorized');
-            return;
-        }
-
         req.user = decoded;
     });
 }
