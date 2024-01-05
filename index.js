@@ -37,6 +37,20 @@ client.connect().then(res => {
   console.log(res);
 });
 
+function clearToken(res) {
+    res.clearCookie('accessToken'); // Clear the cookie
+  }
+
+app.post('/logout', (req, res) => {
+  // Perform logout operations if needed
+  // ...
+
+  // Clear the token on the client side
+  clearToken(res);
+
+  res.send('Logged out successfully');
+});
+
 //front page
 app.get('/', (req, res) => {
   res.send('welcome to YOMOM');

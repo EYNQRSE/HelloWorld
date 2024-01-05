@@ -7,58 +7,58 @@
  *       scheme: bearer
  *       bearerFormat: JWT
  *
- * @openapi
- * /login/admin:
- *   post:
- *     summary: Admin Login
- *     description: Authenticate as an admin and receive an access token
- *     tags: 
- *       - Admin
- *     requestBody:
- *       content:
- *         application/json:
- *           example:
- *             username: 'YOMOMCYBERCAFE'
- *             password: 'donottrythisathome69'
- *     responses:
- *       '200':
- *         description: Successful login
- *         content:
- *           application/json:
- *             example:
- *               message: 'Successful login'
- *               token: 'yourAccessTokenHere'
- *       '401':
- *         description: Unauthorized
- *       '500':
- *         description: Internal Server Error
- * 
- * @openapi
- * /create/member:
- *   post:
- *     summary: Member Signup
- *     description: Create a new member account
- *     tags: 
- *       - Admin
- *     security:
- *       - BearerAuth: []
- *     requestBody:
- *       content:
- *         application/json:
- *           example:
- *             memberName: 'John Doe'
- *             idproof: 'ABC123'
- *             password: 'memberPassword'
- *             # Add other customer properties
- *     responses:
- *       '200':
- *         description: Account created successfully
- *         content:
- *           application/json:
- *             example: 'member account has been created. Welcome YOMOM member!!:D'
- *       '500':
- *         description: Internal Server Error
- *
+* @openapi
+* /login/admin:
+*   post:
+*     summary: Admin Login
+*     description: Authenticate as an admin and receive an access token
+*     tags: 
+*       - Admin
+*     security:
+*       - BearerAuth: []   # This line specifies the use of the BearerAuth security scheme
+*     requestBody:
+*       content:
+*         application/json:
+*           example:
+*             username: 'YOMOMCYBERCAFE'
+*             password: 'donottrythisathome69'
+*     responses:
+*       '200':
+*         description: Successful login
+*         content:
+*           application/json:
+*             example:
+*               message: 'Successful login'
+*               token: 'yourAccessTokenHere'
+*       '401':
+*         description: Unauthorized
+*       '500':
+*         description: Internal Server Error
+* @openapi
+* /create/member:
+*   post:
+*     summary: Member Signup
+*     description: Create a new member account
+*     tags: 
+*       - Admin
+*     security:
+*       - BearerAuth: []   # This line specifies the use of the BearerAuth security scheme
+*     requestBody:
+*       content:
+*         application/json:
+*           example:
+*             memberName: 'John Doe'
+*             idproof: 'ABC123'
+*             password: 'memberPassword'
+*             # Add other customer properties
+*     responses:
+*       '200':
+*         description: Account created successfully
+*         content:
+*           application/json:
+*             example: 'member account has been created. Welcome YOMOM member!!:D'
+*       '500':
+*         description: Internal Server Error
  * @openapi
  * /get/member:
  *   get:
