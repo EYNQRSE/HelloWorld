@@ -1,5 +1,13 @@
 /**
  * @openapi
+ * components:
+ *   securitySchemes:
+ *     bearerAuth:
+ *       type: http
+ *       scheme: bearer
+ *       bearerFormat: JWT
+ *
+ * @openapi
  * /login/admin:
  *   post:
  *     summary: Admin Login
@@ -199,7 +207,7 @@
  *         description: Internal Server Error
  *
  * @openapi
- * /retrieve/pass/{visitorname}/{membername}:
+ * /retrieve/pass/{visitorname}/{idproof}:
  *   get:
  *     summary: Retrieve visitor pass information
  *     description: Retrieve pass information for a visitor based on their name

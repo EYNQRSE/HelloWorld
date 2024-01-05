@@ -6,7 +6,6 @@ app.use(express.json());
 const jwt = require('jsonwebtoken');
 const cookie = require('cookie');
 
-
 //connect to swagger
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsdoc = require('swagger-jsdoc');
@@ -19,7 +18,7 @@ const options = {
       version: '1.0.0',
     },
   },
-  apis: ['./swagger.js'], //files containing annotations as above
+  apis: ['./swagger.js'], // files containing annotations as above
 };
 const swaggerSpec = swaggerJsdoc(options);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
@@ -40,92 +39,83 @@ client.connect().then(res => {
 });
 
 //front page
-app.get('/',(req,res) => {
-    res.send('welcome to YOMOM');
+app.get('/', (req, res) => {
+  res.send('welcome to YOMOM');
 });
 
 function verifyToken(req, res, next) {
-    let token;
+  let token;
 
-    // Check if the token is present in the authorization header
-    let header = req.headers.authorization;
-    if (header) {
-        token = header.split(' ')[1];
+  // Check if the token is present in the authorization header
+  let header = req.headers.authorization;
+  if (header) {
+    token = header.split(' ')[1];
+  } else {
+    // Check if the token is present in cookies
+    const cookies = cookie.parse(req.headers.cookie || '');
+    token = cookies.SSEID;
+  }
+
+  if (!token) {
+    res.status(401).send('Unauthorized');
+    return;
+  }
+
+  jwt.verify(token, 'password', function (err, decoded) {
+    if (err) {
+      console.error('JWT Verification Error:', err);
+      res.status(401).send('Unauthorized');
+      return;
+    }
+
+    console.log('Decoded Token:', decoded);
+
+    // Ensure memberName is present
+    if (!decoded.memberName) {
+      console.error('Member Name not found in the token.');
+      res.status(401).send('Unauthorized');
+      return;
+    }
+
+    req.user = decoded;
+
+    // Restrict access based on role
+    if (req.user.role === 'admin') {
+      next();
     } else {
-        // Check if the token is present in cookies
-        const cookies = cookie.parse(req.headers.cookie || '');
-        token = cookies.SSEID;
+      res.status(403).send('Forbidden: Admin access required');
     }
-
-    if (!token) {
-        res.status(401).send('Unauthorized');
-        return;
-    }
-
-    jwt.verify(token, 'password', function (err, decoded) {
-        if (err) {
-            console.error('JWT Verification Error:', err);
-            res.status(401).send('Unauthorized');
-            return;
-        }
-
-        console.log('Decoded Token:', decoded);
-
-        // Ensure memberName is present
-        if (!decoded.memberName) {
-            console.error('Member Name not found in the token.');
-            res.status(401).send('Unauthorized');
-            return;
-        }
-
-        req.user = decoded;
-
-        // Restrict access based on role
-        if (req.user.role === 'admin') {
-            // Set the token in a cookie
-            generateToken(decoded, res);
-            next();
-        } else {
-            res.status(403).send('Forbidden: Admin access required');
-        }
-    });
+  });
 }
+
 function verifyAdminToken(req, res, next) {
-    verifyToken(req, res, function () {
-        console.log('verifyAdminToken: req.user', req.user);
-        if (req.user && req.user.role === 'admin') {
-            next();
-        } else {
-            console.log('verifyAdminToken: Unauthorized');
-            res.status(403).send('Forbidden: Admin access required');
-        }
-    });
+  verifyToken(req, res, function () {
+    console.log('verifyAdminToken: req.user', req.user);
+    if (req.user && req.user.role === 'admin') {
+      next();
+    } else {
+      console.log('verifyAdminToken: Unauthorized');
+      res.status(403).send('Forbidden: Admin access required');
+    }
+  });
 }
 
 app.post('/login/admin', (req, res) => {
-    login(req.body.username, req.body.password)
-        .then(result => {
-            if (result.message === 'Access Granted') {
-                const token = generateToken({ username: req.body.username, role: 'admin' });
-
-                // Set the token in a cookie
-                res.setHeader('Set-Cookie', cookie.serialize('SSEID', token, {
-                    httpOnly: true,
-                    maxAge: 600, // set the cookie expiry time in seconds
-                }));
-
-                console.log('Generated Token:', token);
-                res.send({ message: 'Successful login', token });
-            } else {
-                res.send('Login unsuccessful');
-            }
-        })
-        .catch(error => {
-            console.error(error);
-            res.status(500).send("Internal Server Error");
-        });
+  login(req.body.username, req.body.password)
+    .then(result => {
+      if (result.message === 'Access Granted') {
+        const token = generateToken({ username: req.body.username, role: 'admin' });
+        console.log('Generated Token:', token);
+        res.send({ message: 'Successful login', token });
+      } else {
+        res.send('Login unsuccessful');
+      }
+    })
+    .catch(error => {
+      console.error(error);
+      res.status(500).send("Internal Server Error");
+    });
 });
-
   
 async function login(reqUsername, reqPassword) {
     let matchUser = await client.db('cybercafe').collection('admin').findOne({ username: reqUsername });
@@ -415,7 +405,7 @@ app.put('/retrieving/pass/:visitorname/:idproof', verifyAdminToken, async (req, 
     }
 });
 
-function generateToken(userData, res = null) {
+function generateToken(userData) {
     const token = jwt.sign(
         userData,
         'password',
@@ -423,14 +413,6 @@ function generateToken(userData, res = null) {
     );
 
     console.log(token);
-
-    // Set the token in a cookie if res is provided
-    if (res) {
-        res.setHeader('Set-Cookie', cookie.serialize('SSEID', token, {
-            httpOnly: true,
-            maxAge: 600, // set the cookie expiry time in seconds
-        }));
-    }
 
     return token;
 }
