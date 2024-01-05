@@ -4,7 +4,6 @@ const app = express();
 const port = process.env.PORT || 3002;
 app.use(express.json());
 const jwt = require('jsonwebtoken');
-const cookie = require('cookie');
 
 //connect to swagger
 const swaggerUi = require('swagger-ui-express');
@@ -44,22 +43,15 @@ app.get('/', (req, res) => {
 });
 
 function verifyToken(req, res, next) {
-  let token;
-
   // Check if the token is present in the authorization header
-  let header = req.headers.authorization;
-  if (header) {
-    token = header.split(' ')[1];
-  } else {
-    // Check if the token is present in cookies
-    const cookies = cookie.parse(req.headers.cookie || '');
-    token = cookies.SSEID;
-  }
+  const header = req.headers.authorization;
 
-  if (!token) {
+  if (!header || !header.startsWith('Bearer ')) {
     res.status(401).send('Unauthorized');
     return;
   }
+
+  const token = header.split(' ')[1];
 
   jwt.verify(token, 'password', function (err, decoded) {
     if (err) {
@@ -116,7 +108,7 @@ app.post('/login/admin', (req, res) => {
       res.status(500).send("Internal Server Error");
     });
 });
-  
+
 async function login(reqUsername, reqPassword) {
     let matchUser = await client.db('cybercafe').collection('admin').findOne({ username: reqUsername });
   

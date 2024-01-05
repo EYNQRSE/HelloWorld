@@ -18,8 +18,8 @@
  *       content:
  *         application/json:
  *           example:
- *             username: 'adminUsername'
- *             password: 'adminPassword'
+ *             username: 'YOMOMCYBERCAFE'
+ *             password: 'donottrythisathome69'
  *     responses:
  *       '200':
  *         description: Successful login
