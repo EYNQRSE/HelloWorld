@@ -258,6 +258,32 @@
  *         description: Internal Server Error
  * 
  *@openapi
+ * test/login/member:
+ *   post:
+ *     summary: test member Login
+ *     description: Authenticate as a member and receive an access token
+ *     tags:
+ *       - Member
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           example:
+ *             idproof: 'tryme'
+ *             password: 'yopassword'
+ *     responses:
+ *       '200':
+ *         description: Successful login
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: 'Successful login. Welcome to YOMOM CYBERCAFE'
+ *               token: 'yourAccessTokenHere'
+ *       '401':
+ *         description: Unauthorized
+ *       '500':
+ *         description: Internal Server Error
+ *
+ *@openapi
  * /test/create/visitor:
  *   post:
  *     summary: Test Create Visitor
