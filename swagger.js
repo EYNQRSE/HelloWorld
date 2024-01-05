@@ -206,18 +206,20 @@
  *       '500':
  *         description: Internal Server Error
  *
- * @swagger
- * /retrieve/pass/{idproof}:
+ * @openapi
+ * /retrieve/pass/{visitorname}/{membername}:
  *   get:
  *     summary: Retrieve visitor pass information
- *     description: Retrieve pass information for a visitor based on their ID proof
+ *     description: Retrieve pass information for a visitor based on their name
  *     tags:
- *       - Visitor
+ *       - Admin
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
- *         name: idproof
+ *         name: visitorname
  *         required: true
- *         description: ID proof of the visitor
+ *         description: Name of the visitor
  *         schema:
  *           type: string
  *     responses:

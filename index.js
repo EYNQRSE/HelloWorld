@@ -102,7 +102,7 @@ async function login(reqUsername, reqPassword) {
   }
 
 //update computer (admin)
-app.put('/update/computer/:computername', verifyToken, async (req, res) => {
+app.put('/update/computer/:computername', verifyAdminToken, async (req, res) => {
     const computername = req.params.computername;
     const { systemworking, available } = req.body;
 
@@ -156,20 +156,20 @@ app.get('/available/cabins', async (req, res) => {
 });
 
 // admin create member
-app.post('/create/member', verifyToken, async (req, res) => {
+app.post('/create/member', verifyAdminToken, async (req, res) => {
     console.log(req.user);
 
     let result = createMember(
-        req.body.customername,
+        req.body.memberName,
         req.body.idproof,
         req.body.password
     );
     res.send(result);
 });
 
-function createMember(reqcustomername, reqidproof, reqpassword) {
+function createMember(reqmemberName, reqidproof, reqpassword) {
     client.db('cybercafe').collection('customer').insertOne({
-        "customername": reqcustomername,
+        "membername": reqmemberName,
         "idproof": reqidproof,
         "password": reqpassword,
         "role": "member"
@@ -223,7 +223,7 @@ async function getAllMembers() {
         const result = await client
             .db('cybercafe')
             .collection('customer')
-            .find({ role: 'member' }, { _id: 0, customername: 1, })
+            .find({ role: 'member' }, { _id: 0, memberName: 1, })
             .toArray();
 
         return result;
@@ -235,7 +235,7 @@ async function getAllMembers() {
 //member create visitor
 app.post('/create/visitor', verifyToken, async (req, res) => {
     try {
-        const memberName = req.user.customername;
+        const memberName = req.user.memberName;
 
         // Call the modified createVisitor function
         let result = await createVisitor(
@@ -266,12 +266,6 @@ async function createVisitor(memberName, visitorName, idProof) {
             .collection('visitor')
             .countDocuments({ createdBy: memberName });
 
-        // If the member has already created 4 visitors, return an error message
-        if (existingVisitorsCount >= 4) {
-            return "You have reached the maximum limit of 4 visitors. Cannot create more visitors.";
-        }
-
-        // If the member has not reached the limit, proceed with creating the visitor
         const result = await client.db('cybercafe').collection('visitor').insertOne({
             "createdBy": memberName,
             "visitorname": visitorName,
@@ -290,7 +284,7 @@ async function createVisitor(memberName, visitorName, idProof) {
 //view visitor
 app.get('/get/my-visitors', verifyToken, async (req, res) => {
     try {
-        const memberName = req.user.customername;
+        const memberName = req.user.memberName;
 
         if (req.user.role === 'admin') {
             const allVisitors = await getAllVisitors();
@@ -335,34 +329,28 @@ async function getAllVisitors() {
     }
 }
 
+//Admin accepting the visitor pass
+app.put('/retrieving/pass/:visitorname/:idproof', verifyAdminToken, async (req, res) => {
+    const visitorname = req.params.visitorname;
+    const idproof = req.params.idproof;
 
-app.get('/retrieve/pass/:idproof', async (req, res) => {
     try {
-      const idproof = req.params.idproof;
-      const visitor = await client
-        .db('cybercafe')
-        .collection('visitor')
-        .findOne({ idproof });
-  
-      if (!visitor) {
-        return res.status(404).send('Visitor not found');
-      }
-  
-      // You can customize the response based on your data structure
-      const passInfo = {
-        visitorname: visitor.visitorname,
-        idproof: visitor.idproof,
-        cabinno: visitor.cabinno,
-        entrytime: visitor.entrytime,
-        createdBy: visitor.createdBy,
-      };
-  
-      res.send(passInfo);
+        const updateaccessResult = await client
+            .db('cybercafe')
+            .collection('visitor')
+            .updateOne({ visitorname,idproof },
+                { $set: { entrytime,cabinno,computername,access } });
+
+        if (updateaccessResult.modifiedCount === 0) {
+            return res.status(404).send('visitor not found or unauthorized');
+        }
+
+        res.send('access updated successfully');
     } catch (error) {
-      console.error(error);
-      res.status(500).send('Internal Server Error');
+        console.error(error);
+        res.status(500).send('Internal Server Error');
     }
-  });
+});
 
 function generateToken(userData) {
     const token = jwt.sign(
