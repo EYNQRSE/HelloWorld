@@ -1,13 +1,5 @@
 /**
  * @openapi
- * components:
- *   securitySchemes:
- *     BearerAuth:
- *       type: http
- *       scheme: bearer
- *       bearerFormat: JWT
- *
- * @openapi
  * /login/admin:
  *   post:
  *     summary: Admin Login

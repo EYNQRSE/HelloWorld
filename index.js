@@ -4,6 +4,8 @@ const app = express();
 const port = process.env.PORT || 3002;
 app.use(express.json());
 const jwt = require('jsonwebtoken');
+const cookie = require('cookie');
+
 
 //connect to swagger
 const swaggerUi = require('swagger-ui-express');
@@ -43,14 +45,22 @@ app.get('/',(req,res) => {
 });
 
 function verifyToken(req, res, next) {
-    let header = req.headers.authorization;
+    let token;
 
-    if (!header) {
+    // Check if the token is present in the authorization header
+    let header = req.headers.authorization;
+    if (header) {
+        token = header.split(' ')[1];
+    } else {
+        // Check if the token is present in cookies
+        const cookies = cookie.parse(req.headers.cookie || '');
+        token = cookies.SSEID;
+    }
+
+    if (!token) {
         res.status(401).send('Unauthorized');
         return;
     }
-
-    let token = header.split(' ')[1];
 
     jwt.verify(token, 'password', function (err, decoded) {
         if (err) {
@@ -59,7 +69,7 @@ function verifyToken(req, res, next) {
             return;
         }
 
-        console.log('Decoded Token:', decoded);  // Log decoded token
+        console.log('Decoded Token:', decoded);
 
         // Ensure memberName is present
         if (!decoded.memberName) {
@@ -79,39 +89,42 @@ function verifyToken(req, res, next) {
     });
 }
 function verifyAdminToken(req, res, next) {
-    verifyToken(req, res)
-        .then(() => {
-            console.log('verifyAdminToken: req.user', req.user);
-            if (req.user && req.user.role === 'admin') {
-                next();
+    verifyToken(req, res);
+    
+    console.log('verifyAdminToken: req.user', req.user);
+    if (req.user && req.user.role === 'admin') {
+        next();
+    } else {
+        console.log('verifyAdminToken: Unauthorized');
+        res.status(403).send('Forbidden: Admin access required');
+    }
+}
+
+
+app.post('/login/admin', (req, res) => {
+    login(req.body.username, req.body.password)
+        .then(result => {
+            if (result.message === 'Access Granted') {
+                const token = generateToken({ username: req.body.username, role: 'admin' });
+
+                // Set the token in a cookie
+                res.setHeader('Set-Cookie', cookie.serialize('SSEID', token, {
+                    httpOnly: true,
+                    maxAge: 600, // set the cookie expiry time in seconds
+                }));
+
+                console.log('Generated Token:', token);
+                res.send({ message: 'Successful login', token });
             } else {
-                console.log('verifyAdminToken: Unauthorized');
-                res.status(403).send('Forbidden: Admin access required');
+                res.send('Login unsuccessful');
             }
         })
         .catch(error => {
-            console.error('Error in verifyToken:', error);
-            res.status(500).send('Internal Server Error');
+            console.error(error);
+            res.status(500).send("Internal Server Error");
         });
-}
+});
 
-// admin login
-app.post('/login/admin', (req, res) => {
-    login(req.body.username, req.body.password)
-      .then(result => {
-        if (result.message === 'Access Granted') {
-          const token = generateToken({ username: req.body.username, role: 'admin' });
-          console.log('Generated Token:', token)
-          res.send({ message: 'Successful login', token });
-        } else {
-          res.send('Login unsuccessful');
-        }
-      })
-      .catch(error => {
-        console.error(error);
-        res.status(500).send("Internal Server Error");
-      });
-  });
   
 async function login(reqUsername, reqPassword) {
     let matchUser = await client.db('cybercafe').collection('admin').findOne({ username: reqUsername });
@@ -400,7 +413,7 @@ app.put('/retrieving/pass/:visitorname/:idproof', verifyAdminToken, async (req, 
     }
 });
 
-function generateToken(userData) {
+function generateToken(userData, res = null) {
     const token = jwt.sign(
         userData,
         'password',
@@ -408,8 +421,18 @@ function generateToken(userData) {
     );
 
     console.log(token);
+
+    // Set the token in a cookie if res is provided
+    if (res) {
+        res.setHeader('Set-Cookie', cookie.serialize('SSEID', token, {
+            httpOnly: true,
+            maxAge: 600, // set the cookie expiry time in seconds
+        }));
+    }
+
     return token;
 }
+
 app.listen(port, () => {
     console.log(`Example app listening on port ${port}`);
 });
