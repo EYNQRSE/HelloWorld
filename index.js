@@ -43,54 +43,51 @@ app.get('/', (req, res) => {
 });
 
 function verifyToken(req, res, next) {
-  // Check if the token is present in the authorization header
-  const header = req.headers.authorization;
+    let header = req.headers.authorization;
 
-  if (!header || !header.startsWith('Bearer ')) {
-    res.status(401).send('Unauthorized');
-    return;
-  }
-
-  const token = header.split(' ')[1];
-
-  jwt.verify(token, 'password', function (err, decoded) {
-    if (err) {
-      console.error('JWT Verification Error:', err);
-      res.status(401).send('Unauthorized');
-      return;
+    if (!header) {
+        res.status(401).send('Unauthorized');
+        return;
     }
 
-    console.log('Decoded Token:', decoded);
+    let token = header.split(' ')[1];
 
-    // Ensure memberName is present
-    if (!decoded.memberName) {
-      console.error('Member Name not found in the token.');
-      res.status(401).send('Unauthorized');
-      return;
-    }
+    jwt.verify(token, 'password', function (err, decoded) {
+        if (err) {
+            console.error('JWT Verification Error:', err);
+            res.status(401).send('Unauthorized');
+            return;
+        }
 
-    req.user = decoded;
+        console.log('Decoded Token:', decoded);  // Log decoded token
 
-    // Restrict access based on role
-    if (req.user.role === 'admin') {
-      next();
-    } else {
-      res.status(403).send('Forbidden: Admin access required');
-    }
-  });
+        // Ensure memberName is present
+        if (!decoded.memberName) {
+            console.error('Member Name not found in the token.');
+            res.status(401).send('Unauthorized');
+            return;
+        }
+
+        req.user = decoded;
+
+        if (req.user.role === 'admin') {
+            next();
+        } else {
+            next();
+        }
+    });
 }
 
 function verifyAdminToken(req, res, next) {
-  verifyToken(req, res, function () {
-    console.log('verifyAdminToken: req.user', req.user);
-    if (req.user && req.user.role === 'admin') {
-      next();
-    } else {
-      console.log('verifyAdminToken: Unauthorized');
-      res.status(403).send('Forbidden: Admin access required');
-    }
-  });
+    verifyToken(req, res, function () {
+        if (req.user && req.user.role === 'admin') {
+            next();
+        } else {
+            res.status(403).send('Forbidden: Admin access required');
+        }
+    });
 }
+
 
 app.post('/login/admin', (req, res) => {
   login(req.body.username, req.body.password)
@@ -217,7 +214,6 @@ app.post('/login/member', async (req, res) => {
         res.status(500).send('Internal Server Error');
     }
 });
-
 
 async function memberLogin(idproof, password) {
     try {
