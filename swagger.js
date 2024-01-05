@@ -146,8 +146,8 @@
  *       content:
  *         application/json:
  *           example:
- *             idproof: 'ABC123'
- *             password: 'customerPassword'
+ *             idproof: 'b022120016'
+ *             password: 'lethimcook12'
  *     responses:
  *       '200':
  *         description: Successful login
@@ -230,6 +230,76 @@
  *         description: Successful retrieve visitor pass
  *       '404':
  *         description: Visitor not found
+ *       '500':
+ *         description: Internal Server Error
+ * 
+ * @openapi
+ * /test/create/member:
+ *   post:
+ *     summary: test Member Signup
+ *     description: Create a new test member account
+ *     tags: 
+ *       - Test-Member
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           example:
+ *             memberName: 'John Doe'
+ *             idproof: 'ABC123'
+ *             password: 'memberPassword'
+ *             # Add other customer properties
+ *     responses:
+ *       '200':
+ *         description: Account created successfully
+ *         content:
+ *           application/json:
+ *             example: 'test-member account has been created. Welcome YOMOM member!!:D'
+ *       '500':
+ *         description: Internal Server Error
+ * 
+ *@openapi
+ * /test/create/visitor:
+ *   post:
+ *     summary: Test Create Visitor
+ *     description: Create a new visitor account
+ *     tags:
+ *       - Test-Member
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           example:
+ *             visitorname: 'avocado'
+ *             idproof: 'ABC123'
+ *     responses:
+ *       '200':
+ *         description: Visitor account created successfully
+ *       '401':
+ *         description: Unauthorized
+ *       '500':
+ *         description: Internal Server Error
+ *
+ * 
+ *@openapi
+ * test/get/my-visitors:
+ *   get:
+ *     summary: Get My Visitors
+ *     description: Get a list of visitors created by the member
+ *     tags:
+ *       - Test-Member
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       '200':
+ *         description: A list of visitors
+ *         content:
+ *           application/json:
+ *             example:
+ *               - visitorname: 'Visitor1'
+ *                 idproof: 'ABC123'
+ *       '401':
+ *         description: Unauthorized
  *       '500':
  *         description: Internal Server Error
  */
