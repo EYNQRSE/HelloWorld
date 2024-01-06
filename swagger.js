@@ -258,7 +258,7 @@
  *         description: Internal Server Error
  * 
  *@openapi
- * test/login/member:
+ * /test/login/member:
  *   post:
  *     summary: test member Login
  *     description: Authenticate as a member and receive an access token
@@ -308,7 +308,7 @@
  *
  * 
  *@openapi
- * test/get/my-visitors:
+ * /test/get/my-visitors:
  *   get:
  *     summary: Get My Visitors
  *     description: Get a list of visitors created by the member

@@ -7,14 +7,8 @@ const jwt = require('jsonwebtoken');
 
 const cors = require('cors'); // Import the cors middleware
 
-const corsOptions = {
-    origin: '*',
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    credentials: true,
-};
-
-app.use(cors(corsOptions));
-
+// Use cors middleware
+app.use(cors());
 
 //connect to swagger
 const swaggerUi = require('swagger-ui-express');
