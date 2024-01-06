@@ -34,6 +34,7 @@
  *         description: Unauthorized
  *       '500':
  *         description: Internal Server Error
+ * 
  * @openapi
  * /retrieve/pass/{visitorname}/{idproof}:
  *   get:
@@ -175,6 +176,7 @@
  *         description: Computer not found or unauthorized
  *       '500':
  *         description: Internal Server Error
+ * 
  * @openapi
  * /update/member/{memberName}:
  *    put:
@@ -183,19 +185,19 @@
  *      tags:
  *        - Admin
  *      parameters:
- *       - in: path
- *         name: memberName
- *         required: true
- *         description: Username of the member to update
- *         schema:
- *           type: string
+ *        - in: path
+ *          name: memberName
+ *          required: true
+ *          description: Username of the member to update
+ *          schema:
+ *            type: string
  *     security:
  *       - BearerAuth: []
  *     requestBody:
  *       content:
  *         application/json:
  *           example:
- *             suspended: 'true'
+ *             suspended: true
  *     responses:
  *       '200':
  *         description: Member account updated successfully

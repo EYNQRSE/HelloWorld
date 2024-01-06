@@ -166,7 +166,7 @@ async function createMember(reqmemberName, reqidproof, reqpassword, reqphone) {
             "password": reqpassword,
             "phoneNumber": reqphone,
             "role": "member",
-            "suspended": "false",
+            "suspended": false,
             "visitors": []
         });
         return "Member account has been created. Welcome YOMOM member!!:D";
@@ -266,7 +266,6 @@ async function getMembersPhoneNumber(idproof) {
 
 // Admin update member suspension status
 app.put('/update/member/:memberName', verifyToken, async (req, res) => {
-    console.log('/update/member/:memberName: req.user', req.user); 
     const memberNameToUpdate = req.params.memberName;
     const { suspend } = req.body;
 
