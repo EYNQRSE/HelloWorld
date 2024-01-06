@@ -82,6 +82,23 @@
  *       '500':
  *         description: Internal Server Error
  *
+ *@openapi
+ * /get/member/phone/{phone}:
+ *   get:
+ *     summary: View Member Phone Number (Admin Only)
+ *     description: retrieve contact number from member (admin only)
+ *     tags:
+ *       - Admin
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       '200':
+ *         description: OK 
+ *       '401':
+ *         description: Unauthorized
+ *       '500':
+ *         description: Internal Server Error
+ *
  * @openapi
  * /update/computer/{computername}:
  *   put:
@@ -113,28 +130,38 @@
  *         description: Computer not found or unauthorized
  *       '500':
  *         description: Internal Server Error
- *
  * @openapi
- * /available/cabins:
- *   get:
- *     summary: View Available Cabins
- *     description: Get a list of available cabins
- *     tags:
- *       - Visitor
+ * /update/member/{memberName}:
+ *    put:
+ *      summary: Update Member Suspension Status (Admin Only)
+ *      description: Update the suspension status of a member (admin only)
+ *      tags:
+ *        - Admin
+ *      parameters:
+ *       - name: memberName
+ *         in: path
+ *         required: true
+ *         description: Username of the member to update
+ *         schema:
+ *           type: string
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           example:
+ *             suspend: true
+ *       required: true
  *     responses:
  *       '200':
- *         description: Successful operation
- *         content:
- *           application/json:
- *             example:
- *               - cabinno: 1
- *                 computername: 'Computer1'
- *                 availability: true
- *                 # Include other relevant cabin information
- *               # Add other cabin objects as needed
+ *         description: Member account updated successfully
+ *       '401':
+ *         description: Unauthorized
+ *       '404':
+ *         description: Member not found or unauthorized
  *       '500':
  *         description: Internal Server Error
- *
+ * 
  * @openapi
  * /login/member:
  *   post:
@@ -308,7 +335,7 @@
  *
  * 
  *@openapi
- * /test/get/my-visitors:
+ * /get/my-visitors:
  *   get:
  *     summary: Get My Visitors
  *     description: Get a list of visitors created by the member

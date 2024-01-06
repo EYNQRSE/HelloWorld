@@ -42,16 +42,11 @@ client.connect().then(res => {
   console.log(res);
 });
 
-function clearToken(res) {
-    res.clearCookie('accessToken'); // Clear the cookie
-  }
-
 app.post('/logout', (req, res) => {
   // Perform logout operations if needed
   // ...
 
   // Clear the token on the client side
-  clearToken(res);
 
   res.send('Logged out successfully');
 });
@@ -150,36 +145,6 @@ app.put('/update/computer/:computername', verifyToken, async (req, res) => {
     }
 });
 
-//view available computer
-async function getAvailableCabins() {
-    try {
-        const result = await client
-            .db('configure')
-            .collection('computer')
-            .find({ systemworking: 'yes' }, { _id: 0, cabinno: 1, computername: 1, available: 1 })
-            .toArray();
-
-        return result.map(computer => ({
-            cabinno: computer.cabinno,
-            computername: computer.computername,
-            availability: computer.available,
-        }));
-    } catch (error) {
-        console.error(error);
-        res.status(500).send('Internal Server Error');
-    }
-}
-
-app.get('/available/cabins', async (req, res) => {
-    try {
-        const availableCabins = await getAvailableCabins();
-        res.send(availableCabins);
-    } catch (error) {
-        console.error(error);
-        res.status(500).send('Internal Server Error');
-    }
-});
-
 // Admin create member
 app.post('/create/member', verifyToken, async (req, res) => {
     console.log('/create/member: req.user', req.user); 
@@ -187,18 +152,21 @@ app.post('/create/member', verifyToken, async (req, res) => {
     let result = await createMember(
         req.body.memberName,
         req.body.idproof,
-        req.body.password
+        req.body.password,
+        req.body.phone
     );
     res.send(result);
 });
 
-async function createMember(reqmemberName, reqidproof, reqpassword) {
+async function createMember(reqmemberName, reqidproof, reqpassword, reqphone) {
     try {
         await client.db('cybercafe').collection('customer').insertOne({
             "memberName": reqmemberName,
             "idproof": reqidproof,
-            "password": reqpassword,  // Consider hashing and salting the password
-            "role": "member"
+            "password": reqpassword,
+            "phoneNumber": reqphone,
+            "role": "member",
+            "suspend": false
         });
         return "Member account has been created. Welcome YOMOM member!!:D";
     } catch (error) {
@@ -218,7 +186,7 @@ app.put('/retrieve/pass/:visitorname/:idproof', verifyToken, async (req, res) =>
             .collection('visitor')
             .updateOne(
                 { visitorname, idproof },
-                { $set: { entrytime: Date.now(), cabinno: newValue, computername: newValue, access: newValue } }
+                { $set: { entrytime: Date.now(), cabinno: newValue, computername: newValue } }
             );
         if (updateaccessResult.modifiedCount === 0) {
             return res.status(404).send('visitor not found or unauthorized');
@@ -245,15 +213,69 @@ app.get('/get/member', verifyToken, async (req, res) => {
         res.status(500).send('Internal Server Error');
     }
 });
+//admin view member phone number
+app.get('/get/member/phone/:idproof', verifyToken, async (req, res) => {
+    const idproof = req.params.idproof;
+    try {
+        if (req.user.role === 'admin') {
+            const allMembers = await getMembersPhoneNumber();
+            res.send(allMembers);
+        } else {
+            res.status(403).send('Forbidden: Admin access required');
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Internal Server Error');
+    }
+});
 
-
-async function getAllMembers() {
+async function getMembersPhoneNumber(idproof) {
     try {
         const result = await client
             .db('cybercafe')
             .collection('customer')
-            .find({ role: 'member' }, { _id: 0, memberName: 1, })
-            .toArray();
+            .findOne({ idproof: idproof })
+
+            return result.map(customer => ({
+                memberName: customer.memberName,
+                phoneNumber: customer.phoneNumber,
+            }));
+        } catch (error) {
+            console.error(error);
+            res.status(500).send('Internal Server Error');
+        }
+}
+
+
+// Admin update member suspension status
+app.put('/update/member/:memberName', verifyToken, async (req, res) => {
+    console.log('/update/member/:memberName: req.user', req.user); 
+    const memberNameToUpdate = req.params.memberName;
+    const { suspend } = req.body;
+
+    try {
+        const updateMemberResult = await updateMember(memberNameToUpdate, suspend);
+
+        if (updateMemberResult.matchedCount === 0) {
+            return res.status(404).send('Member not found or unauthorized');
+        }
+
+        res.send('Member account updated successfully');
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Internal Server Error');
+    }
+});
+
+async function updateMember(memberName, suspend) {
+    try {
+        const result = await client
+            .db('cybercafe')
+            .collection('customer')
+            .updateOne(
+                { memberName },
+                { $set: { suspended: suspend } }
+            );
 
         return result;
     } catch (error) {
@@ -262,13 +284,15 @@ async function getAllMembers() {
     }
 }
 
-
-
 // Member login
 app.post('/login/member', async (req, res) => {
     try {
         const result = await memberLogin(req.body.idproof, req.body.password);
+        
         if (result.message === 'Correct password') {
+            if (result.user.suspended) {
+                return res.status(403).send('Account is suspended. Contact admin for assistance.');
+            }
             const token = generateToken({ idproof: req.body.idproof, role: 'member', memberName: result.user.memberName });
             res.send({ message: 'Successful login. Welcome to YOMOM CYBERCAFE', token });
         } else {
