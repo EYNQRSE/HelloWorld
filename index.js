@@ -179,9 +179,9 @@ async function createMember(reqmemberName, reqidproof, reqpassword, reqphone) {
     }
 }
 
-//Admin accepting the visitor pass
+// Admin accepting the visitor pass
 app.put('/retrieve/pass/:visitorname/:idproof', verifyToken, async (req, res) => {
-    console.log('/retrieve/pass/:visitorname/:idproof: req.user', req.user); 
+    console.log('/retrieve/pass/:visitorname/:idproof: req.user', req.user);
     const visitorname = req.params.visitorname;
     const idproof = req.params.idproof;
 
@@ -190,14 +190,14 @@ app.put('/retrieve/pass/:visitorname/:idproof', verifyToken, async (req, res) =>
             .db('cybercafe')
             .collection('customer')
             .updateOne(
-                { visitorname, idproof },
+                { visitorname: visitorname, idproof: idproof },
                 { $set: { entrytime: Date.now(), cabinno: newValue, computername: newValue } }
             );
         if (updateaccessResult.modifiedCount === 0) {
-            return res.status(404).send('visitor not found or unauthorized');
+            return res.status(404).send('Visitor not found or unauthorized');
         }
 
-        res.send('access updated successfully');
+        res.send('Access updated successfully');
     } catch (error) {
         console.error(error);
         res.status(500).send('Internal Server Error');
@@ -233,6 +233,22 @@ async function getAllMembers() {
         throw error;
     }
 }
+
+//admin view member phone number
+app.get('/get/member/phone/:idproof', verifyToken, async (req, res) => {
+    const idproof = req.params.idproof;
+    try {
+        if (req.user.role === 'admin') {
+            const allMembers = await getMembersPhoneNumber();
+            res.send(allMembers);
+        } else {
+            res.status(403).send('Forbidden: Admin access required');
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Internal Server Error');
+    }
+});
 
 // admin view member phone number
 app.get('/get/member/phone/:idproof', verifyToken, async (req, res) => {
