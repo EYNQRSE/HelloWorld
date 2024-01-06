@@ -166,7 +166,7 @@ async function createMember(reqmemberName, reqidproof, reqpassword, reqphone) {
             "password": reqpassword,
             "phoneNumber": reqphone,
             "role": "member",
-            "suspend": false,
+            "suspended": "false",
             "visitors": []
         });
         return "Member account has been created. Welcome YOMOM member!!:D";
