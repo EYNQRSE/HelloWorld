@@ -4,16 +4,6 @@ const app = express();
 const port = process.env.PORT || 3002;
 app.use(express.json());
 const jwt = require('jsonwebtoken');
-const cors = require('cors');
-app.use(cors());
-
-const corsOptions = {
-    origin: 'https://iliveunderwater.azurewebsites.net/', // replace with your frontend URL
-    credentials: true, // enable passing cookies from frontend to backend
-  };
-  
-  app.use(cors(corsOptions));
-  
 
 //connect to swagger
 const swaggerUi = require('swagger-ui-express');
