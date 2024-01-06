@@ -185,6 +185,10 @@ app.put('/retrieve/pass/:visitorname/:idproof', verifyToken, async (req, res) =>
     const visitorname = req.params.visitorname;
     const idproof = req.params.idproof;
 
+    // Assuming cabinno and computername are defined elsewhere in your code or passed as parameters
+    const cabinno = 'cabinno'; // replace with actual value
+    const computername = 'computername'; // replace with actual value
+
     try {
         const updateaccessResult = await client
             .db('cybercafe')
@@ -203,6 +207,7 @@ app.put('/retrieve/pass/:visitorname/:idproof', verifyToken, async (req, res) =>
         res.status(500).send('Internal Server Error');
     }
 });
+
 
 //admin view member
 app.get('/get/member', verifyToken, async (req, res) => {
