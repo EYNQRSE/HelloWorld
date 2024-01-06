@@ -271,10 +271,10 @@ async function getMembersPhoneNumber(idproof) {
 // Admin update member suspension status
 app.put('/update/suspend/:memberName', verifyToken, async (req, res) => {
     const memberNameToUpdate = req.params.memberName;
-    const { suspend } = req.body;
+    const { suspended } = req.body;
 
     try {
-        const updateMemberResult = await updateMember(memberNameToUpdate, suspend);
+        const updateMemberResult = await updateMember(memberNameToUpdate, suspended);
 
         if (updateMemberResult.matchedCount === 0) {
             return res.status(404).send('Member not found or unauthorized');
@@ -455,7 +455,7 @@ app.post('/test/create/member', async (req, res) => {
         req.body.memberName,
         req.body.idproof,
         req.body.password,
-        req.body.phone
+        req.body.phoneNumber
     );
     res.send(result);
 });
