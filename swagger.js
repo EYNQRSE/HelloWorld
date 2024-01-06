@@ -37,7 +37,7 @@
  * 
  * @openapi
  * /retrieve/pass/{visitorname}/{idproof}:
- *   get:
+ *   put:
  *     summary: Retrieve visitor pass information
  *     description: Retrieve pass information for a visitor based on their name
  *     tags:
@@ -120,30 +120,31 @@
  * /get/member/phone/{idproof}:
  *   get:
  *     summary: View Member Phone Number (Admin Only)
- *     description: retrieve contact number from member (admin only)
+ *     description: Retrieve contact number from a member (admin only)
  *     tags:
  *       - Admin
  *     security:
  *       - BearerAuth: []
  *     parameters:
  *       - in: path
- *         name: idproof 
+ *         name: idproof
  *         required: true
- *         description: idproof
+ *         description: ID proof of the member
  *         schema:
  *           type: string
  *     responses:
  *       '200':
- *         description: OK 
+ *         description: OK
  *         content:
  *           application/json:
- *                 memberName: 'ABU'
- *                 phoneNumber: '0199876543'
+ *             example:
+ *               memberName: 'ABU'
+ *               phoneNumber: '0199876543'
  *       '401':
  *         description: Unauthorized
  *       '500':
  *         description: Internal Server Error
- *
+ * 
  * @openapi
  * /update/computer/{computername}:
  *   put:

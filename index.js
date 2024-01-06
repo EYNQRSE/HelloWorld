@@ -234,12 +234,12 @@ async function getAllMembers() {
     }
 }
 
-//admin view member phone number
+// admin view member phone number
 app.get('/get/member/phone/:idproof', verifyToken, async (req, res) => {
     const idproof = req.params.idproof;
     try {
         if (req.user.role === 'admin') {
-            const allMembers = await getMembersPhoneNumber();
+            const allMembers = await getMembersPhoneNumber(idproof);
             res.send(allMembers);
         } else {
             res.status(403).send('Forbidden: Admin access required');
@@ -255,16 +255,23 @@ async function getMembersPhoneNumber(idproof) {
         const result = await client
             .db('cybercafe')
             .collection('customer')
-            .findOne({ idproof: idproof })
+            .findOne({ idproof: idproof });
 
-            return result.map(customer => ({
-                memberName: customer.memberName,
-                phoneNumber: customer.phoneNumber,
-            }));
-        } catch (error) {
-            console.error(error);
-            res.status(500).send('Internal Server Error');
+        if (result) {
+            // Use the properties directly, no need for map
+            return {
+                memberName: result.memberName,
+                phoneNumber: result.phoneNumber,
+            };
+        } else {
+            // Handle the case where no matching document is found
+            return null;
         }
+    } catch (error) {
+        console.error(error);
+        // Send 500 status in case of an error
+        throw error;
+    }
 }
 
 
