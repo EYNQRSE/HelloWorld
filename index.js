@@ -7,8 +7,14 @@ const jwt = require('jsonwebtoken');
 
 const cors = require('cors'); // Import the cors middleware
 
-// Use cors middleware
-app.use(cors());
+const corsOptions = {
+    origin: '*',
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true,
+};
+
+app.use(cors(corsOptions));
+
 
 //connect to swagger
 const swaggerUi = require('swagger-ui-express');
@@ -411,18 +417,6 @@ async function getAllVisitors() {
     }
 }
 
-
-function generateToken(userData) {
-    const token = jwt.sign(
-        userData,
-        'password',
-        { expiresIn: 600 }
-    );
-
-    console.log(token);
-
-    return token;
-}
 // test create member
 app.post('/test/create/member', async (req, res) => {
 
@@ -467,6 +461,7 @@ app.post('/test/login/member', async (req, res) => {
 
 async function testmemberLogin(idproof, password) {
     try {
+        console.log('Received login request for test-member:', req.body);
         let matchUser = await client.db('cybercafe').collection('customer').findOne({ idproof: idproof });
 
         if (!matchUser) {
@@ -542,6 +537,17 @@ async function testcreateVisitor(memberName, visitorName, idProof) {
     }
 }
 
+function generateToken(userData) {
+    const token = jwt.sign(
+        userData,
+        'password',
+        { expiresIn: 600 }
+    );
+
+    console.log(token);
+
+    return token;
+}
 
 app.listen(port, () => {
     console.log(`Example app listening on port ${port}`);
