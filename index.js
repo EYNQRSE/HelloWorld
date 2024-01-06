@@ -5,6 +5,11 @@ const port = process.env.PORT || 3002;
 app.use(express.json());
 const jwt = require('jsonwebtoken');
 
+const cors = require('cors'); // Import the cors middleware
+
+// Use cors middleware
+app.use(cors());
+
 //connect to swagger
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsdoc = require('swagger-jsdoc');
