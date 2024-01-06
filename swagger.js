@@ -185,8 +185,8 @@
  *      tags:
  *        - Admin
  *      parameters:
- *        - in: path
- *          name: memberName
+ *        - name: memberName
+ *          in: path          
  *          required: true
  *          description: Username of the member to update
  *          schema:
