@@ -109,7 +109,7 @@
  *       '500':
  *         description: Internal Server Error
  *
- *@openapi
+ * @openapi
  * /get/member/phone/{phone}:
  *   get:
  *     summary: View Member Phone Number (Admin Only)
@@ -233,7 +233,6 @@
  *         application/json:
  *           example:
  *             visitorname: 'AKID'
- *             idproof: 'b022120016'
  *     responses:
  *       '200':
  *         description: Visitor account created successfully
@@ -258,7 +257,6 @@
  *           application/json:
  *             example:
  *               - visitorname: 'Visitor1'
- *                 idproof: 'ABC123'
  *       '401':
  *         description: Unauthorized
  *       '500':
@@ -328,7 +326,6 @@
  *         application/json:
  *           example:
  *             visitorname: 'avocado'
- *             idproof: 'ABC123'
  *     responses:
  *       '200':
  *         description: Visitor account created successfully
@@ -354,7 +351,6 @@
  *           application/json:
  *             example:
  *               - visitorname: 'Visitor1'
- *                 idproof: 'ABC123'
  *       '401':
  *         description: Unauthorized
  *       '500':
