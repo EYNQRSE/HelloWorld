@@ -54,6 +54,12 @@
  *         description: Idproof of the member
  *         schema:
  *           type: string
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           example:
+ *             cabinno: '2'
+ *             computername: 'PC_02'
  *     responses:
  *       '200':
  *         description: Successful retrieve visitor pass

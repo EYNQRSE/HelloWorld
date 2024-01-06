@@ -371,11 +371,10 @@ app.post('/create/visitor', verifyToken, async (req, res) => {
     }
 });
 
-async function createVisitor(memberName, visitorName, idProof) {
+async function createVisitor(memberName, visitorName) {
     try {
         const visitorData = {
             visitorname: visitorName,
-            idproof: idProof,
             entrytime: 0,
             cabinno: 0,
             computername: "",
@@ -536,12 +535,11 @@ app.post('/test/create/visitor', verifyToken, async (req, res) => {
         res.status(500).send('Internal Server Error');
     }
 });
-async function testcreateVisitor(memberName, visitorName, idProof) {
+async function testcreateVisitor(memberName, visitorName) {
     try {
         console.log('MemberName:', memberName);
         const visitorData = {
             visitorname: visitorName,
-            idproof: idProof,
             entrytime: 0,
             cabinno: 0,  
             computername: ""
