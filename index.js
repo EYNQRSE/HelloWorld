@@ -166,7 +166,8 @@ async function createMember(reqmemberName, reqidproof, reqpassword, reqphone) {
             "password": reqpassword,
             "phoneNumber": reqphone,
             "role": "member",
-            "suspend": false
+            "suspend": false,
+            "visitors": []
         });
         return "Member account has been created. Welcome YOMOM member!!:D";
     } catch (error) {
@@ -312,6 +313,10 @@ async function memberLogin(idproof, password) {
             return { message: 'User not found!' };
         }
 
+        if (matchUser.suspended) {
+            return { message: 'Account is suspended', user: matchUser };
+        }
+
         // Consider using a library like bcrypt to compare hashed passwords
         if (matchUser.password === password) {
             return { message: 'Correct password', user: matchUser };
@@ -352,28 +357,18 @@ app.post('/create/visitor', verifyToken, async (req, res) => {
 
 async function createVisitor(memberName, visitorName, idProof) {
     try {
-        console.log('MemberName:', memberName);
-        // Check the number of visitors created by the member
-        const existingVisitorsCount = await client
-            .db('cybercafe')
-            .collection('visitor')
-            .countDocuments({ createdBy: memberName });
-
-        // If the member has already created 4 visitors, return an error message
-        if (existingVisitorsCount >= 4) {
-            return "You have reached the maximum limit of 4 visitors. Cannot create more visitors.";
-        }
-
-        // If the member has not reached the limit, proceed with creating the visitor
-        await client.db('cybercafe').collection('visitor').insertOne({
-            createdBy: memberName,
+        const visitorData = {
             visitorname: visitorName,
             idproof: idProof,
             entrytime: 0,
-            cabinno: 0,  
-            computername: 0,
-            access: 0,
-        });
+            cabinno: 0,
+            computername: "",
+        };
+
+        await client.db('cybercafe').collection('customer').updateOne(
+            { memberName },
+            { $push: { visitors: visitorData } }
+        );
 
         return "Visitor account has been created. Welcome to YOMOM Cybercafe! :D";
     } catch (error) {
@@ -390,10 +385,6 @@ app.get('/get/my-visitors', verifyToken, async (req, res) => {
         if (req.user.role === 'admin') {
             const allVisitors = await getAllVisitors();
             res.send(allVisitors);
-        }
-        else if(req.user.role === 'test-member'){
-            const visitors = await getVisitorsCreatedByMember(memberName);
-            res.send(visitors);
         } 
         else {
             const visitors = await getVisitorsCreatedByMember(memberName);
@@ -409,22 +400,26 @@ async function getVisitorsCreatedByMember(memberName) {
     try {
         const result = await client
             .db('cybercafe')
-            .collection('visitor')
-            .find({ createdBy: { $eq: memberName } }, { _id: 0, visitorname: 1, idproof: 1 })
-            .toArray();
+            .collection('customer')
+            .findOne({ memberName }, { _id: 0, visitors: 1 });
 
-        return result;
+        if (result && result.visitors) {
+            return result.visitors;
+        } else {
+            return [];
+        }
     } catch (error) {
         console.error(error);
         throw error;
     }
 }
 
+
 async function getAllVisitors() {
     try {
         const result = await client
             .db('cybercafe')
-            .collection('visitor')
+            .collection('customer')
             .find({}, { _id: 0, visitorname: 1 })
             .toArray();
 
@@ -452,7 +447,9 @@ async function testcreateMember(reqmemberName, reqidproof, reqpassword) {
             "memberName": reqmemberName,
             "idproof": reqidproof,
             "password": reqpassword,  // Consider hashing and salting the password
-            "role": "test-member"
+            "role": "test-member",
+            "suspend": false,
+            "visitors": []
         });
         return "Test Member account has been created. Welcome YOMOM member!!:D";
     } catch (error) {
@@ -508,7 +505,7 @@ app.post('/test/create/visitor', verifyToken, async (req, res) => {
         let result = await testcreateVisitor(
             membername,
             req.body.visitorname,
-            req.body.idproof
+            req.body.idProof
         );
 
         // Check the result and send an appropriate response
@@ -526,27 +523,17 @@ app.post('/test/create/visitor', verifyToken, async (req, res) => {
 async function testcreateVisitor(memberName, visitorName, idProof) {
     try {
         console.log('MemberName:', memberName);
-        // Check the number of visitors created by the member
-        const existingVisitorsCount = await client
-            .db('cybercafe')
-            .collection('visitor')
-            .countDocuments({ createdBy: memberName });
-
-        // If the member has already created 4 visitors, return an error message
-        if (existingVisitorsCount >= 4) {
-            return "You have reached the maximum limit of 4 visitors. Cannot create more visitors.";
-        }
-
-        // If the member has not reached the limit, proceed with creating the visitor
-        await client.db('cybercafe').collection('visitor').insertOne({
-            createdBy: memberName,
+        const visitorData = {
             visitorname: visitorName,
             idproof: idProof,
             entrytime: 0,
             cabinno: 0,  
-            computername: 0,
-            access: 0,
-        });
+            computername: ""
+        }
+        await client.db('cybercafe').collection('customer').updateOne(
+            { memberName },
+            { $push: { visitors: visitorData } }
+        );
 
         return "Visitor account has been created. Welcome to YOMOM Cybercafe! :D";
     } catch (error) {
