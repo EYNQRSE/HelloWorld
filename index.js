@@ -194,8 +194,10 @@ app.put('/retrieve/pass/:visitorname/:idproof', verifyToken, async (req, res) =>
             .db('cybercafe')
             .collection('customer')
             .updateOne(
-                { visitorname: visitorname, idproof: idproof },
-                { $set: { entrytime: Date.now(), cabinno, computername } }
+                { "idproof": idproof, "visitors": {
+                    $elemMatch: { "visitorname": visitorname }
+                }},
+                { $set: { cabinno, computername, entrytime: Date.now() } }
             );
         if (updateaccessResult.modifiedCount === 0) {
             return res.status(404).send('Visitor not found or unauthorized');
