@@ -47,9 +47,10 @@
  *       content:
  *         application/json:
  *           example:
- *             memberName: 'John Doe'
- *             idproof: 'ABC123'
- *             password: 'memberPassword'
+ *             memberName: 'AMIR'
+ *             idproof: 'b022120016'
+ *             password: 'mermaidman'
+ *             phoneNumber: '0177803125'
  *             # Add other customer properties
  *     responses:
  *       '200':
@@ -70,13 +71,9 @@
  *       - BearerAuth: []
  *     responses:
  *       '200':
- *         description: A list of customers
+ *         description: A list of customers 
  *         content:
- *           application/json:
- *             example:
- *               - memberName: 'John Doe'
- *                 idproof: 'ABC123'
- *              
+ *           application/json:      
  *       '401':
  *         description: Unauthorized
  *       '500':
@@ -94,6 +91,8 @@
  *     responses:
  *       '200':
  *         description: OK 
+ *         content:
+ *           application/json:
  *       '401':
  *         description: Unauthorized
  *       '500':
@@ -155,6 +154,8 @@
  *     responses:
  *       '200':
  *         description: Member account updated successfully
+ *         content:
+ *           application/json:
  *       '401':
  *         description: Unauthorized
  *       '404':
@@ -174,7 +175,7 @@
  *         application/json:
  *           example:
  *             idproof: 'b022120016'
- *             password: 'lethimcook12'
+ *             password: 'mermaidman'
  *     responses:
  *       '200':
  *         description: Successful login
@@ -201,8 +202,8 @@
  *       content:
  *         application/json:
  *           example:
- *             visitorname: 'John Doe'
- *             idproof: 'ABC123'
+ *             visitorname: 'AKID'
+ *             idproof: 'b022120016'
  *     responses:
  *       '200':
  *         description: Visitor account created successfully
@@ -274,7 +275,7 @@
  *             memberName: 'John Doe'
  *             idproof: 'ABC123'
  *             password: 'memberPassword'
- *             # Add other customer properties
+ *             phoneNumber: '01000022233'
  *     responses:
  *       '200':
  *         description: Account created successfully
