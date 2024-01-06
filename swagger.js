@@ -182,6 +182,8 @@
  *    put:
  *      summary: Update Member Suspension Status (Admin Only)
  *      description: Update the suspension status of a member (admin only)
+ *      tags:
+ *        - Admin
  *      parameters:
  *        - name: memberName
  *          in: path          
@@ -189,14 +191,14 @@
  *          description: Username of the member to update
  *          schema:
  *            type: string
- *     security:
+ *      security:
  *       - BearerAuth: []
- *     requestBody:
+ *      requestBody:
  *       content:
  *         application/json:
  *           example:
  *             suspended: true
- *     responses:
+ *      responses:
  *       '200':
  *         description: Member account updated successfully
  *       '401':
