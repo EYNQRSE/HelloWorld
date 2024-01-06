@@ -149,18 +149,15 @@ app.put('/update/computer/:computername', verifyToken, async (req, res) => {
 app.post('/create/member', verifyToken, async (req, res) => {
     console.log('/create/member: req.body', req.body);
 
-    if (req.body.memberName && req.body.idproof && req.body.password) {
-        let result = await createMember(
-            req.body.memberName,
-            req.body.idproof,
-            req.body.password,
-            req.body.phone || null
-        );
-        res.send(result);
-    } else {
-        res.status(400).send("Invalid request. Ensure all required fields are provided.");
-    }
+    let result = await createMember(
+        req.body.memberName,
+        req.body.idproof,
+        req.body.password,
+        req.body.phoneNumber
+    );
+    res.send(result);
 });
+
 async function createMember(reqmemberName, reqidproof, reqpassword, reqphone) {
     try {
         const result = await client.db('cybercafe').collection('customer').insertOne({
