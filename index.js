@@ -191,7 +191,7 @@ app.put('/retrieve/pass/:visitorname/:idproof', verifyToken, async (req, res) =>
             .collection('customer')
             .updateOne(
                 { visitorname: visitorname, idproof: idproof },
-                { $set: { entrytime: Date.now(), cabinno: newValue, computername: newValue } }
+                { $set: { entrytime: Date.now(), cabinno: cabinno, computername: computername } }
             );
         if (updateaccessResult.modifiedCount === 0) {
             return res.status(404).send('Visitor not found or unauthorized');
