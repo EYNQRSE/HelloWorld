@@ -35,6 +35,33 @@
  *       '500':
  *         description: Internal Server Error
  * @openapi
+ * /retrieve/pass/{visitorname}/{idproof}:
+ *   get:
+ *     summary: Retrieve visitor pass information
+ *     description: Retrieve pass information for a visitor based on their name
+ *     tags:
+ *       - Admin
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: visitorname
+ *         required: true
+ *         description: Name of the visitor
+ *         name: idproof
+ *         required: true
+ *         description: Idproof of the member
+ *         schema:
+ *           type: string
+ *     responses:
+ *       '200':
+ *         description: Successful retrieve visitor pass
+ *       '404':
+ *         description: Visitor not found
+ *       '500':
+ *         description: Internal Server Error
+ * 
+ * @openapi
  * /create/member:
  *   post:
  *     summary: Member Signup
@@ -73,7 +100,10 @@
  *       '200':
  *         description: A list of customers 
  *         content:
- *           application/json:      
+ *           application/json:
+ *               example:
+ *                  memberName: 'AMIR'
+ *                  idproof: 'b022120016'
  *       '401':
  *         description: Unauthorized
  *       '500':
@@ -93,6 +123,8 @@
  *         description: OK 
  *         content:
  *           application/json:
+ *                 memberName: 'ABU'
+ *                 phoneNumber: '0199876543'
  *       '401':
  *         description: Unauthorized
  *       '500':
@@ -154,8 +186,6 @@
  *     responses:
  *       '200':
  *         description: Member account updated successfully
- *         content:
- *           application/json:
  *       '401':
  *         description: Unauthorized
  *       '404':
@@ -234,33 +264,6 @@
  *       '500':
  *         description: Internal Server Error
  *
- * @openapi
- * /retrieve/pass/{visitorname}/{idproof}:
- *   get:
- *     summary: Retrieve visitor pass information
- *     description: Retrieve pass information for a visitor based on their name
- *     tags:
- *       - Admin
- *     security:
- *       - BearerAuth: []
- *     parameters:
- *       - in: path
- *         name: visitorname
- *         required: true
- *         description: Name of the visitor
- *         name: idproof
- *         required: true
- *         description: Idproof of the member
- *         schema:
- *           type: string
- *     responses:
- *       '200':
- *         description: Successful retrieve visitor pass
- *       '404':
- *         description: Visitor not found
- *       '500':
- *         description: Internal Server Error
- * 
  * @openapi
  * /test/create/member:
  *   post:
