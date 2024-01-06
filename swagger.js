@@ -86,7 +86,6 @@
  *             idproof: 'b022120016'
  *             password: 'mermaidman'
  *             phoneNumber: '0177803125'
- *             # Add other customer properties
  *     responses:
  *       '200':
  *         description: Account created successfully
@@ -118,7 +117,7 @@
  *         description: Internal Server Error
  *
  * @openapi
- * /get/member/phone/{phone}:
+ * /get/member/phone/{idproof}:
  *   get:
  *     summary: View Member Phone Number (Admin Only)
  *     description: retrieve contact number from member (admin only)
@@ -128,9 +127,9 @@
  *       - BearerAuth: []
  *     parameters:
  *       - in: path
- *         name: phone
+ *         name: idproof 
  *         required: true
- *         description: Phone number of the member
+ *         description: idproof
  *         schema:
  *           type: string
  *     responses:
