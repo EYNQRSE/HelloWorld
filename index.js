@@ -147,20 +147,23 @@ app.put('/update/computer/:computername', verifyToken, async (req, res) => {
 
 // Admin create member
 app.post('/create/member', verifyToken, async (req, res) => {
-    console.log('/create/member: req.user', req.user); 
+    console.log('/create/member: req.body', req.body);
 
-    let result = await createMember(
-        req.body.memberName,
-        req.body.idproof,
-        req.body.password,
-        req.body.phone
-    );
-    res.send(result);
+    if (req.body.memberName && req.body.idproof && req.body.password) {
+        let result = await createMember(
+            req.body.memberName,
+            req.body.idproof,
+            req.body.password,
+            req.body.phone || null
+        );
+        res.send(result);
+    } else {
+        res.status(400).send("Invalid request. Ensure all required fields are provided.");
+    }
 });
-
 async function createMember(reqmemberName, reqidproof, reqpassword, reqphone) {
     try {
-        await client.db('cybercafe').collection('customer').insertOne({
+        const result = await client.db('cybercafe').collection('customer').insertOne({
             "memberName": reqmemberName,
             "idproof": reqidproof,
             "password": reqpassword,
@@ -169,12 +172,16 @@ async function createMember(reqmemberName, reqidproof, reqpassword, reqphone) {
             "suspended": false,
             "visitors": []
         });
+
+        console.log('MongoDB Insert Result:', result);
+
         return "Member account has been created. Welcome YOMOM member!!:D";
     } catch (error) {
         console.error(error);
         return "Failed to create member account. Please try again later.";
     }
 }
+
 //Admin accepting the visitor pass
 app.put('/retrieve/pass/:visitorname/:idproof', verifyToken, async (req, res) => {
     console.log('/retrieve/pass/:visitorname/:idproof: req.user', req.user); 
