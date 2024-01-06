@@ -455,7 +455,7 @@ app.post('/test/login/member', async (req, res) => {
 
 async function testmemberLogin(idproof, password) {
     try {
-        console.log('Received login request for test-member:', req.body);
+        console.log('Received login request for test-member:', idproof);
         let matchUser = await client.db('cybercafe').collection('customer').findOne({ idproof: idproof });
 
         if (!matchUser) {
