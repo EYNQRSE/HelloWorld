@@ -179,6 +179,32 @@
  * 
  * @openapi
  * /update/suspend/{memberName}:
+ *    put:
+ *      summary: Update Member Suspension Status (Admin Only)
+ *      description: Update the suspension status of a member (admin only)
+ *      parameters:
+ *        - name: memberName
+ *          in: path          
+ *          required: true
+ *          description: Username of the member to update
+ *          schema:
+ *            type: string
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           example:
+ *             suspended: true
+ *     responses:
+ *       '200':
+ *         description: Member account updated successfully
+ *       '401':
+ *         description: Unauthorized
+ *       '404':
+ *         description: Member not found or unauthorized
+ *       '500':
+ *         description: Internal Server Error
  * 
  * @openapi
  * /login/member:
