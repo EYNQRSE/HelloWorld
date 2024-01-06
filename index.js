@@ -450,17 +450,19 @@ app.post('/test/create/member', async (req, res) => {
     let result = await testcreateMember(
         req.body.memberName,
         req.body.idproof,
-        req.body.password
+        req.body.password,
+        req.body.phone
     );
     res.send(result);
 });
 
-async function testcreateMember(reqmemberName, reqidproof, reqpassword) {
+async function testcreateMember(reqmemberName, reqidproof, reqpassword,reqphone) {
     try {
         await client.db('cybercafe').collection('customer').insertOne({
             "memberName": reqmemberName,
             "idproof": reqidproof,
             "password": reqpassword,  // Consider hashing and salting the password
+            "phoneNumber": reqphone,
             "role": "test-member",
             "suspend": false,
             "visitors": []
