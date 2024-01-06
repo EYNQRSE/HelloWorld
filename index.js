@@ -176,7 +176,8 @@ async function createMember(reqmemberName, reqidproof, reqpassword, reqphone) {
     }
 }
 //Admin accepting the visitor pass
-app.put('/retrieve/pass/:visitorname/:idproof', verifyToken, async (req, res) => { 
+app.put('/retrieve/pass/:visitorname/:idproof', verifyToken, async (req, res) => {
+    console.log('/retrieve/pass/:visitorname/:idproof: req.user', req.user); 
     const visitorname = req.params.visitorname;
     const idproof = req.params.idproof;
 
@@ -265,6 +266,7 @@ async function getMembersPhoneNumber(idproof) {
 
 // Admin update member suspension status
 app.put('/update/member/:memberName', verifyToken, async (req, res) => {
+    console.log('/update/member/:memberName: req.user', req.user); 
     const memberNameToUpdate = req.params.memberName;
     const { suspend } = req.body;
 

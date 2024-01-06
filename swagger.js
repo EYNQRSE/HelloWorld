@@ -48,6 +48,7 @@
  *         name: visitorname
  *         required: true
  *         description: Name of the visitor
+ *       - in: path
  *         name: idproof
  *         required: true
  *         description: Idproof of the member
@@ -118,6 +119,13 @@
  *       - Admin
  *     security:
  *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: phone
+ *         required: true
+ *         description: Phone number of the member
+ *         schema:
+ *           type: string
  *     responses:
  *       '200':
  *         description: OK 
@@ -169,8 +177,8 @@
  *      tags:
  *        - Admin
  *      parameters:
- *       - name: memberName
- *         in: path
+ *       - in: path
+ *         name: memberName
  *         required: true
  *         description: Username of the member to update
  *         schema:
