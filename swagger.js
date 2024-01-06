@@ -192,11 +192,11 @@
  *     security:
  *       - BearerAuth: []
  *     requestBody:
+ *       required: true
  *       content:
  *         application/json:
  *           example:
  *             suspend: true
- *       required: true
  *     responses:
  *       '200':
  *         description: Member account updated successfully
