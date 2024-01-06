@@ -178,7 +178,7 @@
  *         description: Internal Server Error
  * 
  * @openapi
- * /update/member/{memberName}:
+ * /update/suspend/{memberName}:
  *    put:
  *      summary: Update Member Suspension Status (Admin Only)
  *      description: Update the suspension status of a member (admin only)

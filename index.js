@@ -265,7 +265,7 @@ async function getMembersPhoneNumber(idproof) {
 
 
 // Admin update member suspension status
-app.put('/update/member/:memberName', verifyToken, async (req, res) => {
+app.put('/update/suspend/:memberName', verifyToken, async (req, res) => {
     const memberNameToUpdate = req.params.memberName;
     const { suspend } = req.body;
 
