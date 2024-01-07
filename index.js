@@ -186,7 +186,6 @@ async function createMember(reqmemberName, reqidproof, reqpassword, reqphone) {
     }
 }
 
-// Admin accepting the visitor pass
 app.put('/retrieve/pass/:visitorname/:idproof', verifyToken, async (req, res) => {
     console.log('/retrieve/pass/:visitorname/:idproof: req.user', req.user);
     const visitorname = req.params.visitorname;
@@ -201,8 +200,8 @@ app.put('/retrieve/pass/:visitorname/:idproof', verifyToken, async (req, res) =>
             .db('cybercafe')
             .collection('customer')
             .updateOne(
-                { "idproof": idproof, "visitors": { $elemMatch: { "visitorname": visitorname, "idproof": idproof } } },
-                { $set: { "visitors.$.entrytime": Date.now(), "visitors.$.cabinno": cabinno, "visitors.$.computername": computername} }
+                { "visitors.visitorname": visitorname, "idproof": idproof },
+                { $set: { "visitors.$.entrytime": Date.now(), "visitors.$.cabinno": cabinno, "visitors.$.computername": computername } }
             );
 
         if (updateaccessResult.modifiedCount === 0) {
@@ -215,8 +214,6 @@ app.put('/retrieve/pass/:visitorname/:idproof', verifyToken, async (req, res) =>
         res.status(500).send('Internal Server Error');
     }
 });
-
-
 
 //admin view member
 app.get('/get/member', verifyToken, async (req, res) => {
@@ -248,29 +245,17 @@ async function getAllMembers() {
     }
 }
 
-//admin view member phone number
+// Admin view member phone number
 app.get('/get/member/phone/:idproof', verifyToken, async (req, res) => {
     const idproof = req.params.idproof;
     try {
         if (req.user.role === 'admin') {
-            const allMembers = await getMembersPhoneNumber();
-            res.send(allMembers);
-        } else {
-            res.status(403).send('Forbidden: Admin access required');
-        }
-    } catch (error) {
-        console.error(error);
-        res.status(500).send('Internal Server Error');
-    }
-});
-
-// admin view member phone number
-app.get('/get/member/phone/:idproof', verifyToken, async (req, res) => {
-    const idproof = req.params.idproof;
-    try {
-        if (req.user.role === 'admin') {
-            const allMembers = await getMembersPhoneNumber(idproof);
-            res.send(allMembers);
+            const memberPhoneNumber = await getMembersPhoneNumber(idproof);
+            if (memberPhoneNumber) {
+                res.json(memberPhoneNumber);
+            } else {
+                res.status(404).send('Member not found');
+            }
         } else {
             res.status(403).send('Forbidden: Admin access required');
         }
@@ -288,22 +273,18 @@ async function getMembersPhoneNumber(idproof) {
             .findOne({ idproof: idproof });
 
         if (result) {
-            // Use the properties directly, no need for map
             return {
                 memberName: result.memberName,
                 phoneNumber: result.phoneNumber,
             };
         } else {
-            // Handle the case where no matching document is found
             return null;
         }
     } catch (error) {
         console.error(error);
-        // Send 500 status in case of an error
         throw error;
     }
 }
-
 
 // Admin update member suspension status
 app.put('/update/suspend/:memberName', verifyToken, async (req, res) => {
