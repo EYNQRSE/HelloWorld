@@ -4,8 +4,15 @@ const app = express();
 const port = process.env.PORT || 3002;
 app.use(express.json());
 const jwt = require('jsonwebtoken');
-
 const cors = require('cors'); // Import the cors middleware
+const timestamp = Date.now();
+const date = new Date(timestamp);
+
+console.log(date.toLocaleString()); // Display the date and time in the local format
+
+const timestampInSeconds = Math.floor(Date.now() / 1000);
+console.log(timestampInSeconds);
+
 
 // Use cors middleware
 app.use(cors());
@@ -186,19 +193,18 @@ app.put('/retrieve/pass/:visitorname/:idproof', verifyToken, async (req, res) =>
     const idproof = req.params.idproof;
 
     // Assuming cabinno and computername are defined elsewhere in your code or passed as parameters
-    const cabinno = 'cabinno'; // replace with actual value
-    const computername = 'computername'; // replace with actual value
+    const cabinno = req.body.cabinno; // replace with actual value
+    const computername = req.body.computername; // replace with actual value
 
     try {
         const updateaccessResult = await client
             .db('cybercafe')
             .collection('customer')
             .updateOne(
-                { "idproof": idproof, "visitors": {
-                    $elemMatch: { "visitorname": visitorname }
-                }},
-                { $set: { cabinno, computername, entrytime: Date.now() } }
+                { "idproof": idproof, "visitors": { $elemMatch: { "visitorname": visitorname, "idproof": idproof } } },
+                { $set: { "visitors.$.entrytime": Date.now(), "visitors.$.cabinno": cabinno, "visitors.$.computername": computername} }
             );
+
         if (updateaccessResult.modifiedCount === 0) {
             return res.status(404).send('Visitor not found or unauthorized');
         }
@@ -209,6 +215,7 @@ app.put('/retrieve/pass/:visitorname/:idproof', verifyToken, async (req, res) =>
         res.status(500).send('Internal Server Error');
     }
 });
+
 
 
 //admin view member
@@ -425,7 +432,7 @@ async function createVisitor(memberName, visitorName) {
     }
 }
 
-//view visitor
+// View visitors
 app.get('/get/my-visitors', verifyToken, async (req, res) => {
     try {
         const memberName = req.user.memberName;
@@ -433,8 +440,7 @@ app.get('/get/my-visitors', verifyToken, async (req, res) => {
         if (req.user.role === 'admin') {
             const allVisitors = await getAllVisitors();
             res.send(allVisitors);
-        } 
-        else {
+        } else {
             const visitors = await getVisitorsCreatedByMember(memberName);
             res.send(visitors);
         }
@@ -449,7 +455,10 @@ async function getVisitorsCreatedByMember(memberName) {
         const result = await client
             .db('cybercafe')
             .collection('customer')
-            .findOne({ memberName }, { _id: 0, visitors: 1 });
+            .findOne(
+                { memberName },
+                { _id: 0, visitors: 1 }
+            );
 
         if (result && result.visitors) {
             return result.visitors;
@@ -462,16 +471,21 @@ async function getVisitorsCreatedByMember(memberName) {
     }
 }
 
-
 async function getAllVisitors() {
     try {
         const result = await client
             .db('cybercafe')
             .collection('customer')
-            .find({}, { _id: 0, visitorname: 1 })
+            .find(
+                {},
+                { _id: 0, visitors: 1 }
+            )
             .toArray();
 
-        return result;
+        // Extract the visitors array from each document
+        const allVisitors = result.map(({ visitors }) => visitors).filter(Boolean);
+
+        return allVisitors;
     } catch (error) {
         console.error(error);
         throw error;
