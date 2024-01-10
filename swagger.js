@@ -165,8 +165,8 @@
  *       content:
  *         application/json:
  *           example:
- *             systemworking: yes
- *             available: yes
+ *             systemworking: 'yes'
+ *             available: 'yes'
  *     responses:
  *       '200':
  *         description: Computer updated successfully
