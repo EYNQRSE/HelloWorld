@@ -128,10 +128,6 @@ async function createAdmin(username, password) {
     }
 }
 
-createAdmin('YOMOMADMIN','givemesomemoneywouldya12@')
-.then(response => console.log(response))
-.catch(error => console.error(error));
-
 app.post('/login/admin', (req, res) => {
     login(req.body.username, req.body.password)
         .then(result => {
