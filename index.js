@@ -63,35 +63,37 @@ app.get('/', (req, res) => {
   res.send('welcome to YOMOM');
 });
 
-function verifyToken(req, res, next) {
-    let header = req.headers.authorization;
+function verifyTokenAndRole(role) {
+    return (req, res, next) => {
+        let header = req.headers.authorization;
 
-    if (!header) {
-        return res.status(401).send('Unauthorized');
-    }
-
-    let token = header.split(' ')[1];
-
-    try {
-        let decoded = jwt.verify(token, 'password');
-        req.user = decoded;
-
-        // Ensure role is present in the token
-        if (!req.user.role) {
-            console.error('Role not found in the token.');
+        if (!header) {
             return res.status(401).send('Unauthorized');
         }
 
-        // Continue to the next middleware if the role is either admin or member
-        if (req.user.role === 'admin' || req.user.role === 'member' || req.user.role === 'test-member') {
-            next();
-        } else {
-            res.status(403).send('Forbidden: Admin or member access required');
+        let token = header.split(' ')[1];
+
+        try {
+            let decoded = jwt.verify(token, 'password');
+            req.user = decoded;
+
+            // Ensure role is present in the token
+            if (!req.user.role) {
+                console.error('Role not found in the token.');
+                return res.status(401).send('Unauthorized');
+            }
+
+            // Ensure the user has the required role
+            if (req.user.role === role) {
+                next();
+            } else {
+                res.status(403).send(`Forbidden: ${role} access required`);
+            }
+        } catch (err) {
+            console.error('JWT Verification Error:', err);
+            res.status(401).send('Unauthorized');
         }
-    } catch (err) {
-        console.error('JWT Verification Error:', err);
-        res.status(401).send('Unauthorized');
-    }
+    };
 }
 
 
@@ -129,7 +131,7 @@ async function login(reqUsername, reqPassword) {
   }
 
 //update computer (admin)
-app.put('/update/computer/:computername', verifyToken, async (req, res) => {
+app.put('/update/computer/:computername', verifyTokenAndRole('admin'), async (req, res) => {
     console.log('/update/computer/:computername: req.user', req.user); 
     const computername = req.params.computername;
     const { systemworking, available } = req.body;
@@ -153,7 +155,7 @@ app.put('/update/computer/:computername', verifyToken, async (req, res) => {
 });
 
 // Admin create member
-app.post('/create/member', verifyToken, async (req, res) => {
+app.post('/create/member', verifyTokenAndRole('admin'), async (req, res) => {
     console.log('/create/member: req.body', req.body);
 
     let result = await createMember(
@@ -186,7 +188,7 @@ async function createMember(reqmemberName, reqidproof, reqpassword, reqphone) {
     }
 }
 
-app.put('/retrieve/pass/:visitorname/:idproof', verifyToken, async (req, res) => {
+app.put('/retrieve/pass/:visitorname/:idproof', verifyTokenAndRole('admin'), async (req, res) => {
     console.log('/retrieve/pass/:visitorname/:idproof: req.user', req.user);
     const visitorname = req.params.visitorname;
     const idproof = req.params.idproof;
@@ -201,7 +203,7 @@ app.put('/retrieve/pass/:visitorname/:idproof', verifyToken, async (req, res) =>
             .collection('customer')
             .updateOne(
                 { "visitors.visitorname": visitorname, "idproof": idproof },
-                { $set: { "visitors.$.entrytime": Date.now(), "visitors.$.cabinno": cabinno, "visitors.$.computername": computername } }
+                { $set: { "visitors.$.entrytime": timestampInSeconds, "visitors.$.cabinno": cabinno, "visitors.$.computername": computername } }
             );
 
         if (updateaccessResult.modifiedCount === 0) {
@@ -216,7 +218,7 @@ app.put('/retrieve/pass/:visitorname/:idproof', verifyToken, async (req, res) =>
 });
 
 //admin view member
-app.get('/get/member', verifyToken, async (req, res) => {
+app.get('/get/member', verifyTokenAndRole('admin'), async (req, res) => {
     try {
         if (req.user.role === 'admin') {
             const allMembers = await getAllMembers();
@@ -246,7 +248,7 @@ async function getAllMembers() {
 }
 
 // Admin view member phone number
-app.get('/get/member/phone/:idproof', verifyToken, async (req, res) => {
+app.get('/get/member/phone/:idproof', verifyTokenAndRole('admin'), async (req, res) => {
     const idproof = req.params.idproof;
     try {
         if (req.user.role === 'admin') {
@@ -287,7 +289,7 @@ async function getMembersPhoneNumber(idproof) {
 }
 
 // Admin update member suspension status
-app.put('/update/suspend/:memberName', verifyToken, async (req, res) => {
+app.put('/update/suspend/:memberName', verifyTokenAndRole('admin'), async (req, res) => {
     const memberNameToUpdate = req.params.memberName;
     const { suspended } = req.body;
 
@@ -367,7 +369,7 @@ async function memberLogin(idproof, password) {
 }
 
 // Member create visitor
-app.post('/create/visitor', verifyToken, async (req, res) => {
+app.post('/create/visitor', verifyTokenAndRole('member'), async (req, res) => {
     try {
         console.log(req.user)
         const membername = req.user.memberName;
@@ -414,7 +416,7 @@ async function createVisitor(memberName, visitorName) {
 }
 
 // View visitors
-app.get('/get/my-visitors', verifyToken, async (req, res) => {
+app.get('/get/my-visitors', verifyTokenAndRole, async (req, res) => {
     try {
         const memberName = req.user.memberName;
 
@@ -541,7 +543,7 @@ async function testmemberLogin(idproof, password) {
 }
 
 // test-Member create visitor
-app.post('/test/create/visitor', verifyToken, async (req, res) => {
+app.post('/test/create/visitor', verifyTokenAndRole('test-member'), async (req, res) => {
     try {
         console.log(req.user)
         const membername = req.user.memberName;
