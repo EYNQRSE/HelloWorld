@@ -470,10 +470,10 @@ app.get('/get/my-visitors', verifyTokenAndRole, async (req, res) => {
 
         if (req.user.role === 'admin') {
             const allVisitors = await getAllVisitors();
-            res.send(allVisitors);
+            res.send({ role: 'admin', visitors: allVisitors });
         } else {
             const visitors = await getVisitorsCreatedByMember(memberName);
-            res.send(visitors);
+            res.send({ role: 'member', visitors: visitors });
         }
     } catch (error) {
         console.error(error);
@@ -522,6 +522,7 @@ async function getAllVisitors() {
         throw error;
     }
 }
+
 
 // test create member
 app.post('/test/create/member', async (req, res) => {
