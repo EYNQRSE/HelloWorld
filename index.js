@@ -107,6 +107,30 @@ function verifyTokenAndRole(role) {
     };
 }
 
+async function createAdmin(username, password) {
+    try {
+        // Hash the password before storing it
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        const adminData = {
+            username: username,
+            password: hashedPassword,
+            role: 'admin',
+        };
+
+        const result = await client.db('cybercafe').collection('admin').insertOne(adminData);
+
+        console.log('New admin account created:', result.ops[0]);
+        return "Admin account has been created successfully.";
+    } catch (error) {
+        console.error(error);
+        return "Failed to create admin account. Please try again later.";
+    }
+}
+
+createAdmin('YOMOMADMIN','givemesomemoneywouldya12@')
+.then(response => console.log(response))
+.catch(error => console.error(error));
 
 app.post('/login/admin', (req, res) => {
     login(req.body.username, req.body.password)
