@@ -14,14 +14,14 @@ console.log(date.toLocaleString()); // Display the date and time in the local fo
 const timestampInSeconds = Math.floor(Date.now() / 1000);
 console.log(timestampInSeconds);
 
-const options = { 
+const TimeOptions = { 
     hour: '2-digit', 
     minute: '2-digit', 
     second: '2-digit', 
     hour12: false 
   };
   
-  const formattedDate = date.toLocaleString('en-US', options);
+  const formattedDate = date.toLocaleString('en-US', TimeOptions);
   
   console.log(formattedDate);
 
@@ -31,7 +31,7 @@ app.use(cors());
 //connect to swagger
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsdoc = require('swagger-jsdoc');
-const options = {
+const SwaggerOptions = {
   definition: {
     openapi: '3.0.0',
     info: {
@@ -42,7 +42,7 @@ const options = {
   },
   apis: ['./swagger.js'], // files containing annotations as above
 };
-const swaggerSpec = swaggerJsdoc(options);
+const swaggerSpec = swaggerJsdoc(SwaggerOptions);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 //connect to mongo
