@@ -20,8 +20,8 @@
  *       content:
  *         application/json:
  *           example:
- *             username: 'YOMOMCYBERCAFE'
- *             password: 'donottrythisathome69'
+ *             username: 'username'
+ *             password: 'password'
  *     responses:
  *       '200':
  *         description: Successful login
@@ -82,10 +82,10 @@
  *       content:
  *         application/json:
  *           example:
- *             memberName: 'AMIR'
- *             idproof: 'b022120016'
- *             password: 'mermaidman'
- *             phoneNumber: '0177803125'
+ *             memberName: 'username'
+ *             idproof: 'idproof'
+ *             password: 'password'
+ *             phoneNumber: 'phone number'
  *     responses:
  *       '200':
  *         description: Account created successfully
@@ -109,8 +109,8 @@
  *         content:
  *           application/json:
  *               example:
- *                  memberName: 'AMIR'
- *                  idproof: 'b022120016'
+ *                  memberName: 'username'
+ *                  idproof: 'idproof'
  *       '401':
  *         description: Unauthorized
  *       '500':
@@ -138,8 +138,8 @@
  *         content:
  *           application/json:
  *             example:
- *               memberName: 'ABU'
- *               phoneNumber: '0199876543'
+ *               memberName: 'username'
+ *               phoneNumber: 'phone number'
  *       '401':
  *         description: Unauthorized
  *       '500':
@@ -219,8 +219,8 @@
  *       content:
  *         application/json:
  *           example:
- *             idproof: 'b022120016'
- *             password: 'mermaidman'
+ *             idproof: 'idproof'
+ *             password: 'password'
  *     responses:
  *       '200':
  *         description: Successful login
@@ -247,7 +247,7 @@
  *       content:
  *         application/json:
  *           example:
- *             visitorname: 'AKID'
+ *             visitorname: 'visitor name'
  *     responses:
  *       '200':
  *         description: Visitor account created successfully
@@ -288,10 +288,10 @@
  *       content:
  *         application/json:
  *           example:
- *             memberName: 'John Doe'
- *             idproof: 'ABC123'
- *             password: 'memberPassword'
- *             phoneNumber: '01000022233'
+ *             memberName: 'username'
+ *             idproof: 'idproof'
+ *             password: 'password'
+ *             phoneNumber: 'phone number'
  *     responses:
  *       '200':
  *         description: Account created successfully
@@ -312,8 +312,8 @@
  *       content:
  *         application/json:
  *           example:
- *             idproof: 'tryme'
- *             password: 'yopassword'
+ *             idproof: 'idproof'
+ *             password: 'password'
  *     responses:
  *       '200':
  *         description: Successful login
@@ -340,7 +340,7 @@
  *       content:
  *         application/json:
  *           example:
- *             visitorname: 'avocado'
+ *             visitorname: 'username'
  *     responses:
  *       '200':
  *         description: Visitor account created successfully

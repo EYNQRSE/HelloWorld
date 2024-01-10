@@ -7,12 +7,23 @@ const jwt = require('jsonwebtoken');
 const cors = require('cors'); // Import the cors middleware
 const timestamp = Date.now();
 const date = new Date(timestamp);
+const bcrypt = require('bcrypt');
 
 console.log(date.toLocaleString()); // Display the date and time in the local format
 
 const timestampInSeconds = Math.floor(Date.now() / 1000);
 console.log(timestampInSeconds);
 
+const options = { 
+    hour: '2-digit', 
+    minute: '2-digit', 
+    second: '2-digit', 
+    hour12: false 
+  };
+  
+  const formattedDate = date.toLocaleString('en-US', options);
+  
+  console.log(formattedDate);
 
 // Use cors middleware
 app.use(cors());
@@ -117,18 +128,27 @@ app.post('/login/admin', (req, res) => {
         });
 });
 
-
 async function login(reqUsername, reqPassword) {
-    let matchUser = await client.db('cybercafe').collection('admin').findOne({ username: reqUsername });
-  
-    if (!matchUser)
-      return { message: "User not found!" };
-  
-    if (matchUser.password === reqPassword)
-      return { message: "Access Granted", user: matchUser };
-    else
-      return { message: "Invalid password" };
-  }
+    try {
+        const admin = await client.db('cybercafe').collection('admin').findOne({ username: reqUsername });
+
+        if (!admin) {
+            return { success: false, message: 'Admin not found!' };
+        }
+
+        // TODO: Use bcrypt to securely compare hashed passwords
+        const isPasswordCorrect = await bcrypt.compare(reqPassword, admin.password);
+
+        if (isPasswordCorrect) {
+            return { success: true, message: 'Access Granted', user: admin };
+        } else {
+            return { success: false, message: 'Invalid password' };
+        }
+    } catch (error) {
+        console.error(error);
+        return { success: false, message: 'Internal Server Error' };
+    }
+}
 
 //update computer (admin)
 app.put('/update/computer/:computername', verifyTokenAndRole('admin'), async (req, res) => {
@@ -203,7 +223,7 @@ app.put('/retrieve/pass/:visitorname/:idproof', verifyTokenAndRole('admin'), asy
             .collection('customer')
             .updateOne(
                 { "visitors.visitorname": visitorname, "idproof": idproof },
-                { $set: { "visitors.$.entrytime": timestampInSeconds, "visitors.$.cabinno": cabinno, "visitors.$.computername": computername } }
+                { $set: { "visitors.$.entrytime": formattedDate, "visitors.$.cabinno": cabinno, "visitors.$.computername": computername } }
             );
 
         if (updateaccessResult.modifiedCount === 0) {
@@ -346,27 +366,31 @@ app.post('/login/member', async (req, res) => {
 
 async function memberLogin(idproof, password) {
     try {
-        let matchUser = await client.db('cybercafe').collection('customer').findOne({ idproof: idproof });
+        const user = await client.db('cybercafe').collection('customer').findOne({ idproof: idproof });
 
-        if (!matchUser) {
-            return { message: 'User not found!' };
+        if (!user) {
+            return { success: false, message: 'User not found!' };
         }
 
-        if (matchUser.suspended) {
-            return { message: 'Account is suspended', user: matchUser };
+        if (user.suspended) {
+            return { success: false, message: 'Account is suspended', user };
         }
 
-        // Consider using a library like bcrypt to compare hashed passwords
-        if (matchUser.password === password) {
-            return { message: 'Correct password', user: matchUser };
+        // TODO: Use a library like bcrypt to securely compare hashed passwords
+        const isPasswordCorrect = (user.password === password);
+
+        if (isPasswordCorrect) {
+            const token = generateToken({ idproof, role: 'member', memberName: user.memberName });
+            return { success: true, message: 'Correct password', token };
         } else {
-            return { message: 'Invalid password' };
+            return { success: false, message: 'Invalid password' };
         }
     } catch (error) {
         console.error(error);
-        return { message: 'Internal Server Error' };
+        return { success: false, message: 'Internal Server Error' };
     }
 }
+
 
 // Member create visitor
 app.post('/create/visitor', verifyTokenAndRole('member'), async (req, res) => {
