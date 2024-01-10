@@ -128,6 +128,10 @@ async function createAdmin(username, password) {
     }
 }
 
+createAdmin('YOMOMADMIN','givemesomemoneywouldya12@')
+.then(response => console.log(response))
+.catch(error => console.error(error));
+
 app.post('/login/admin', (req, res) => {
     login(req.body.username, req.body.password)
         .then(result => {
@@ -479,19 +483,15 @@ app.get('/get/my-visitors', verifyTokenAndRole, async (req, res) => {
 
 async function getVisitorsCreatedByMember(memberName) {
     try {
-        const result = await client
+        const cursor = client
             .db('cybercafe')
             .collection('customer')
-            .findOne(
-                { memberName },
-                { _id: 0, visitors: 1 }
-            );
+            .find({ memberName }, { _id: 0, visitors: 1 });
 
-        if (result && result.visitors) {
-            return result.visitors;
-        } else {
-            return [];
-        }
+        // Limit the number of results per query (you can adjust this number)
+        const result = await cursor.limit(100).toArray();
+
+        return result.map(({ visitors }) => visitors).filter(Boolean);
     } catch (error) {
         console.error(error);
         throw error;
@@ -500,19 +500,15 @@ async function getVisitorsCreatedByMember(memberName) {
 
 async function getAllVisitors() {
     try {
-        const result = await client
+        const cursor = client
             .db('cybercafe')
             .collection('customer')
-            .find(
-                {},
-                { _id: 0, visitors: 1 }
-            )
-            .toArray();
+            .find({}, { _id: 0, visitors: 1 });
 
-        // Extract the visitors array from each document
-        const allVisitors = result.map(({ visitors }) => visitors).filter(Boolean);
+        // Limit the number of results per query (you can adjust this number)
+        const result = await cursor.limit(100).toArray();
 
-        return allVisitors;
+        return result.map(({ visitors }) => visitors).filter(Boolean);
     } catch (error) {
         console.error(error);
         throw error;
