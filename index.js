@@ -394,6 +394,7 @@ app.post('/login/member', async (req, res) => {
 
 async function memberLogin(idproof, password) {
     try {
+        console.log('Entering memberLogin function');
         const user = await client.db('cybercafe').collection('customer').findOne({ idproof: idproof });
 
         if (!user) {
@@ -405,7 +406,9 @@ async function memberLogin(idproof, password) {
         }
 
         // Use bcrypt to securely compare hashed passwords
+        console.log('Before bcrypt.compare');
         const isPasswordCorrect = await bcrypt.compare(password, user.password);
+        console.log('After bcrypt.compare');
 
         if (isPasswordCorrect) {
             const token = generateToken({ idproof, role: 'member', memberName: user.memberName });
@@ -414,7 +417,7 @@ async function memberLogin(idproof, password) {
             return { success: false, message: 'Invalid password' };
         }
     } catch (error) {
-        console.error(error);
+        console.error('Error in memberLogin:', error);
         return { success: false, message: 'Internal Server Error' };
     }
 }
