@@ -60,15 +60,6 @@ client.connect().then(res => {
   console.log(res);
 });
 
-app.post('/logout', (req, res) => {
-  // Perform logout operations if needed
-  // ...
-
-  // Clear the token on the client side
-
-  res.send('Logged out successfully');
-});
-
 //front page
 app.get('/', (req, res) => {
   res.send('welcome to YOMOM');
@@ -404,10 +395,9 @@ async function memberLogin(idproof, password) {
         if (user.suspended) {
             return { success: false, message: 'Account is suspended', user };
         }
-
         // Use bcrypt to securely compare hashed passwords
         console.log('Before bcrypt.compare');
-        const isPasswordCorrect = await bcrypt.compare(password, user.password);
+        const isPasswordCorrect = await bcrypt.compare(password, matchUser.password);
         console.log('After bcrypt.compare');
 
         if (isPasswordCorrect) {
@@ -564,7 +554,6 @@ async function testcreateMember(reqmemberName, reqidproof, reqpassword, reqphone
     }
 }
 
-
 // test Member login
 app.post('/test/login/member', async (req, res) => {
     try {
@@ -590,8 +579,10 @@ async function testmemberLogin(idproof, password) {
             return { message: 'User not found!' };
         }
 
-        // Consider using a library like bcrypt to compare hashed passwords
-        if (matchUser.password === password) {
+        // Use bcrypt to securely compare hashed passwords
+        const isPasswordCorrect = await bcrypt.compare(password, matchUser.password);
+
+        if (isPasswordCorrect) {
             return { message: 'Correct password', user: matchUser };
         } else {
             return { message: 'Invalid password' };
@@ -649,16 +640,20 @@ async function testcreateVisitor(memberName, visitorName) {
 }
 
 function generateToken(userData) {
-    const token = jwt.sign(
-        userData,
-        'password',
-        { expiresIn: 600 }
-    );
-
-    console.log(token);
-
-    return token;
+    try {
+        const token = jwt.sign(
+            userData,
+            'password',
+            { expiresIn: 600 }
+        );
+        console.log(token);
+        return token;
+    } catch (error) {
+        console.error('Token Generation Error:', error);
+        throw error;
+    }
 }
+
 
 function isPasswordStrong(password) {
     const minLength = 10;
@@ -667,6 +662,12 @@ function isPasswordStrong(password) {
     return password.length >= minLength && regex.test(password);
   }
   
+client.connect().then(res => {
+    console.log(res);
+ }).catch(error => {
+    console.error('MongoDB Connection Error:', error);
+ });
+ 
 
 app.listen(port, () => {
     console.log(`Example app listening on port ${port}`);
