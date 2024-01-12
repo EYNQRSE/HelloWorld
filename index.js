@@ -128,10 +128,6 @@ async function createAdmin(username, password) {
     }
 }
 
-createAdmin('YOMOMADMIN','givemesomemoneywouldya12@')
-.then(response => console.log(response))
-.catch(error => console.error(error));
-
 app.post('/login/admin', (req, res) => {
     login(req.body.username, req.body.password)
         .then(result => {
@@ -213,10 +209,18 @@ app.post('/create/member', verifyTokenAndRole('admin'), async (req, res) => {
 
 async function createMember(reqmemberName, reqidproof, reqpassword, reqphone) {
     try {
+        // Check if the password is strong
+        if (!isPasswordStrong(reqpassword)) {
+            return "Password does not meet the strength criteria.";
+        }
+
+        // Hash the password before storing it
+        const hashedPassword = await bcrypt.hash(reqpassword, 10);
+
         const result = await client.db('cybercafe').collection('customer').insertOne({
             "memberName": reqmemberName,
             "idproof": reqidproof,
-            "password": reqpassword,
+            "password": hashedPassword,
             "phoneNumber": reqphone,
             "role": "member",
             "suspended": false,
@@ -400,8 +404,8 @@ async function memberLogin(idproof, password) {
             return { success: false, message: 'Account is suspended', user };
         }
 
-        // TODO: Use a library like bcrypt to securely compare hashed passwords
-        const isPasswordCorrect = (user.password === password);
+        // Use bcrypt to securely compare hashed passwords
+        const isPasswordCorrect = await bcrypt.compare(password, user.password);
 
         if (isPasswordCorrect) {
             const token = generateToken({ idproof, role: 'member', memberName: user.memberName });
@@ -528,23 +532,35 @@ app.post('/test/create/member', async (req, res) => {
     res.send(result);
 });
 
-async function testcreateMember(reqmemberName, reqidproof, reqpassword,reqphone) {
+async function testcreateMember(reqmemberName, reqidproof, reqpassword, reqphone) {
     try {
-        await client.db('cybercafe').collection('customer').insertOne({
+        // Check if the password is strong
+        if (!isPasswordStrong(reqpassword)) {
+            return "Password is too weak.";
+        }
+
+        // Hash the password before storing it
+        const hashedPassword = await bcrypt.hash(reqpassword, 10);
+
+        const result = await client.db('cybercafe').collection('customer').insertOne({
             "memberName": reqmemberName,
             "idproof": reqidproof,
-            "password": reqpassword,  // Consider hashing and salting the password
+            "password": hashedPassword,
             "phoneNumber": reqphone,
             "role": "test-member",
-            "suspend": false,
+            "suspended": false,
             "visitors": []
         });
-        return "Test Member account has been created. Welcome YOMOM member!!:D";
+
+        console.log('MongoDB Insert Result:', result);
+
+        return "Test-Member account has been created. Welcome YOMOM member!!:D";
     } catch (error) {
         console.error(error);
         return "Failed to create member account. Please try again later.";
     }
 }
+
 
 // test Member login
 app.post('/test/login/member', async (req, res) => {
@@ -640,6 +656,14 @@ function generateToken(userData) {
 
     return token;
 }
+
+function isPasswordStrong(password) {
+    const minLength = 10;
+    const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&^.()])[A-Za-z\d@$!%*?&^.()]{10,}$/;
+  
+    return password.length >= minLength && regex.test(password);
+  }
+  
 
 app.listen(port, () => {
     console.log(`Example app listening on port ${port}`);
