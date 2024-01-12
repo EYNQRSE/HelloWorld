@@ -386,22 +386,23 @@ app.post('/login/member', async (req, res) => {
 async function memberLogin(idproof, password) {
     try {
         console.log('Entering memberLogin function');
-        const user = await client.db('cybercafe').collection('customer').findOne({ idproof: idproof });
+        const matchUser = await client.db('cybercafe').collection('customer').findOne({ idproof: idproof });
 
-        if (!user) {
+        if (!matchUser) {
             return { success: false, message: 'User not found!' };
         }
 
-        if (user.suspended) {
-            return { success: false, message: 'Account is suspended', user };
+        if (matchUser.suspended) {
+            return { success: false, message: 'Account is suspended', matchUser };
         }
+
         // Use bcrypt to securely compare hashed passwords
         console.log('Before bcrypt.compare');
         const isPasswordCorrect = await bcrypt.compare(password, matchUser.password);
         console.log('After bcrypt.compare');
 
         if (isPasswordCorrect) {
-            const token = generateToken({ idproof, role: 'member', memberName: user.memberName });
+            const token = generateToken({ idproof, role: 'member', memberName: matchUser.memberName });
             return { success: true, message: 'Correct password', token };
         } else {
             return { success: false, message: 'Invalid password' };
@@ -411,6 +412,7 @@ async function memberLogin(idproof, password) {
         return { success: false, message: 'Internal Server Error' };
     }
 }
+
 
 
 // Member create visitor
