@@ -406,7 +406,7 @@ async function memberLogin(idproof, password) {
             return { success: true, message: 'Correct password', token };
         } else {
             return { success: false, message: 'Invalid password' };
-        }
+        }        
     } catch (error) {
         console.error('Error in memberLogin:', error);
         return { success: false, message: 'Internal Server Error' };
@@ -470,9 +470,12 @@ app.get('/get/my-visitors', verifyTokenAndRole, async (req, res) => {
         if (req.user.role === 'admin') {
             const allVisitors = await getAllVisitors();
             res.send({ role: 'admin', visitors: allVisitors });
-        } else {
+        } else if (req.user.role === 'member') {
             const visitors = await getVisitorsCreatedByMember(memberName);
             res.send({ role: 'member', visitors: visitors });
+        } else {
+            const visitors = await getVisitorsCreatedByMember(memberName);
+            res.send({ role: 'test-member', visitors: visitors });
         }
     } catch (error) {
         console.error(error);
@@ -480,40 +483,38 @@ app.get('/get/my-visitors', verifyTokenAndRole, async (req, res) => {
     }
 });
 
+
 async function getVisitorsCreatedByMember(memberName) {
     try {
-        const cursor = client
+        const cursor = await client
             .db('cybercafe')
             .collection('customer')
-            .find({ memberName }, { _id: 0, visitors: 1 });
+            .find({ memberName }, { _id: 0, visitors: 1 })
+            .limit(30)
+            .toArray();
 
-        // Limit the number of results per query (you can adjust this number)
-        const result = await cursor.limit(100).toArray();
-
-        return result.map(({ visitors }) => visitors).filter(Boolean);
+        return cursor.map(({ visitors }) => visitors).filter(Boolean);
     } catch (error) {
-        console.error(error);
+        console.error('Error in getVisitorsCreatedByMember:', error);
         throw error;
     }
 }
 
 async function getAllVisitors() {
     try {
-        const cursor = client
+        const cursor = await client
             .db('cybercafe')
             .collection('customer')
-            .find({}, { _id: 0, visitors: 1 });
+            .find({}, { _id: 0, visitors: 1 })
+            .limit(30)
+            .toArray();
 
-        // Limit the number of results per query (you can adjust this number)
-        const result = await cursor.limit(100).toArray();
-
-        return result.map(({ visitors }) => visitors).filter(Boolean);
+        return cursor.map(({ visitors }) => visitors).filter(Boolean);
     } catch (error) {
-        console.error(error);
+        console.error('Error in getAllVisitors:', error);
         throw error;
     }
 }
-
 
 // test create member
 app.post('/test/create/member', async (req, res) => {
