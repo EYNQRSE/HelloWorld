@@ -147,38 +147,6 @@
  *         description: Internal Server Error
  * 
  * @openapi
- * /update/computer/{computername}:
- *   put:
- *     summary: Update Computer Configuration (Admin Only)
- *     description: Update the configuration of a computer (admin only)
- *     tags:
- *       - Admin
- *     parameters:
- *       - name: computername
- *         in: path
- *         required: true
- *         description: Name of the computer to update
- *         schema:
- *           type: string
- *     security:
- *       - BearerAuth: []
- *     requestBody:
- *       content:
- *         application/json:
- *           example:
- *             systemworking: 'yes'
- *             available: 'yes'
- *     responses:
- *       '200':
- *         description: Computer updated successfully
- *       '401':
- *         description: Unauthorized
- *       '404':
- *         description: Computer not found or unauthorized
- *       '500':
- *         description: Internal Server Error
- * 
- * @openapi
  * /update/suspend/{memberName}:
  *    put:
  *      summary: Update Member Suspension Status (Admin Only)
@@ -271,8 +239,8 @@
  *         schema:
  *           type: string
  *     responses:
- *       200:
- *         description: Success message
+ *       204:
+ *         description: Visitor deleted successfully
  *       404:
  *         description: Visitor not found or unauthorized
  *       500:
@@ -364,8 +332,8 @@
  *         schema:
  *           type: string
  *     responses:
- *       200:
- *         description: Success message
+ *       204:
+ *         description: Visitor deleted successfully
  *       404:
  *         description: Visitor not found or unauthorized
  *       500:

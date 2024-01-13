@@ -392,7 +392,7 @@ async function memberLogin(memberName, password) {
         const isPasswordCorrect = await bcrypt.compare(password, matchUser.password);
 
         if (isPasswordCorrect) {
-            return { success: true, message: 'Correct password', user: matchUser };
+            return { success: true, message: 'Correct password', user: { ...matchUser, memberName } };
         } else {
             return { success: false, message: 'Invalid password' };
         }
@@ -401,6 +401,7 @@ async function memberLogin(memberName, password) {
         return { success: false, message: 'Internal Server Error' };
     }
 }
+
 
 // Member create visitor
 app.post('/create/visitor', verifyTokenAndRole('member'), async (req, res) => {
@@ -451,6 +452,7 @@ async function createVisitor(memberName, visitorName) {
 // Member delete visitor
 app.delete('/delete/visitor/:visitorname', verifyTokenAndRole('member'), async (req, res) => {
     try {
+        console.log(req.user)
         const memberName = req.user.memberName;
         const visitorNameToDelete = req.params.visitorname;
 
