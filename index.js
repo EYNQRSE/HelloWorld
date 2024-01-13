@@ -85,11 +85,16 @@ function verifyTokenAndRole(role) {
                 return res.status(401).send('Unauthorized');
             }
 
-            // Ensure the user has the required role
-            if (req.user.role === role) {
+            // Allow access if no specific role is required
+            if (!role) {
                 next();
             } else {
-                res.status(403).send(`Forbidden: ${role} access required`);
+                // Ensure the user has the required role
+                if (req.user.role === role) {
+                    next();
+                } else {
+                    res.status(403).send(`Forbidden: ${role} access required`);
+                }
             }
         } catch (err) {
             console.error('JWT Verification Error:', err);
