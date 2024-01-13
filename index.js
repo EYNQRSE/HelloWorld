@@ -98,27 +98,6 @@ function verifyTokenAndRole(role) {
     };
 }
 
-async function createAdmin(username, password) {
-    try {
-        // Hash the password before storing it
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        const adminData = {
-            username: username,
-            password: hashedPassword,
-            role: 'admin',
-        };
-
-        const result = await client.db('cybercafe').collection('admin').insertOne(adminData);
-
-        console.log('New admin account created:', result.ops[0]);
-        return "Admin account has been created successfully.";
-    } catch (error) {
-        console.error(error);
-        return "Failed to create admin account. Please try again later.";
-    }
-}
-
 app.post('/login/admin', (req, res) => {
     login(req.body.username, req.body.password)
         .then(result => {
@@ -202,7 +181,7 @@ async function createMember(reqmemberName, reqidproof, reqpassword, reqphone) {
     try {
         // Check if the password is strong
         if (!isPasswordStrong(reqpassword)) {
-            return "Password does not meet the strength criteria.";
+            return { success: false, message: "Password does not meet the strength criteria." };
         }
 
         // Hash the password before storing it
@@ -220,12 +199,17 @@ async function createMember(reqmemberName, reqidproof, reqpassword, reqphone) {
 
         console.log('MongoDB Insert Result:', result);
 
-        return "Member account has been created. Welcome YOMOM member!!:D";
+        if (result.insertedCount > 0) {
+            return { success: true, message: "Member account has been created. Welcome YOMOM member!!:D" };
+        } else {
+            return { success: false, message: "Failed to create member account. Please try again later." };
+        }
     } catch (error) {
         console.error(error);
-        return "Failed to create member account. Please try again later.";
+        return { success: false, message: "Internal Server Error" };
     }
 }
+
 
 app.put('/retrieve/pass/:visitorname/:idproof', verifyTokenAndRole('admin'), async (req, res) => {
     console.log('/retrieve/pass/:visitorname/:idproof: req.user', req.user);
@@ -372,7 +356,7 @@ app.post('/login/member', async (req, res) => {
             if (result.user.suspended) {
                 return res.status(403).send('Account is suspended. Contact admin for assistance.');
             }
-            const token = generateToken({ idproof: req.body.idproof, role: 'member', memberName: result.user.memberName });
+            const token = generateToken({ idproof: req.body.idproof, role: 'member' });
             res.send({ message: 'Successful login. Welcome to YOMOM CYBERCAFE', token });
         } else {
             res.send('Login unsuccessful');
@@ -386,27 +370,31 @@ app.post('/login/member', async (req, res) => {
 async function memberLogin(idproof, password) {
     try {
         console.log('Entering memberLogin function');
+        console.log('ID Proof:', idproof);
+
         const matchUser = await client.db('cybercafe').collection('customer').findOne({ idproof: idproof });
 
         if (!matchUser) {
+            console.log('User not found for ID Proof:', idproof);
             return { success: false, message: 'User not found!' };
         }
 
         if (matchUser.suspended) {
+            console.log('Suspended account for ID Proof:', idproof);
             return { success: false, message: 'Account is suspended', matchUser };
         }
 
-        // Use bcrypt to securely compare hashed passwords
         console.log('Before bcrypt.compare');
         const isPasswordCorrect = await bcrypt.compare(password, matchUser.password);
         console.log('After bcrypt.compare');
 
         if (isPasswordCorrect) {
-            const token = generateToken({ idproof, role: 'member', memberName: matchUser.memberName });
+            const token = generateToken({ idproof, role: 'member'});
             return { success: true, message: 'Correct password', token };
         } else {
+            console.log('Invalid password for ID Proof:', idproof);
             return { success: false, message: 'Invalid password' };
-        }        
+        }
     } catch (error) {
         console.error('Error in memberLogin:', error);
         return { success: false, message: 'Internal Server Error' };
