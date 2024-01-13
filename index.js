@@ -5,15 +5,8 @@ const port = process.env.PORT || 3002;
 app.use(express.json());
 const jwt = require('jsonwebtoken');
 const cors = require('cors'); // Import the cors middleware
-const timestamp = Date.now();
-const date = new Date(timestamp);
 const bcrypt = require('bcrypt');
 const { ObjectId } = require('mongodb'); // Import ObjectId for creating unique IDs
-
-console.log(date.toLocaleString()); // Display the date and time in the local format
-
-const timestampInSeconds = Math.floor(Date.now() / 1000);
-console.log(timestampInSeconds);
 
 const TimeOptions = { 
     hour: '2-digit', 
@@ -21,12 +14,7 @@ const TimeOptions = {
     second: '2-digit', 
     hour12: false, 
     timeZone: 'Asia/Kuala_Lumpur'
-
-  };
-  
-  const formattedDate = date.toLocaleString('en-MY', TimeOptions);
-  
-  console.log(formattedDate);
+};
 
 // Use cors middleware
 app.use(cors());
@@ -57,10 +45,6 @@ const client = new MongoClient(uri, {
     strict: true,
     deprecationErrors: true,
   }
-});
-
-client.connect().then(res => {
-  console.log(res);
 });
 
 //front page

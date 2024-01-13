@@ -94,6 +94,7 @@
  *             example: 'member account has been created. Welcome YOMOM member!!:D'
  *       '500':
  *         description: Internal Server Error
+ * 
  * @openapi
  * /get/member:
  *   get:
@@ -277,27 +278,6 @@
  *       500:
  *         description: Internal Server Error
  * 
- * @openapi
- * /get/my-visitors:
- *   get:
- *     summary: Get My Visitors
- *     description: Get a list of visitors created by the member
- *     tags:
- *       - Member
- *     security:
- *       - BearerAuth: []
- *     responses:
- *       '200':
- *         description: A list of visitors
- *         content:
- *           application/json:
- *             example:
- *               - visitorname: 'Visitor1'
- *       '401':
- *         description: Unauthorized
- *       '500':
- *         description: Internal Server Error
- *
  * @openapi
  * /test/create/member:
  *   post:
