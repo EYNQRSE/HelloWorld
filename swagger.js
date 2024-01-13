@@ -255,7 +255,28 @@
  *         description: Unauthorized
  *       '500':
  *         description: Internal Server Error
- *
+ * 
+ * @openapi
+ * /delete/visitor/{visitorname}:
+ *   delete:
+ *     summary: Delete a visitor by name
+ *     tags:
+ *       - Member
+ *     parameters:
+ *       - name: visitorname
+ *         in: path
+ *         required: true
+ *         description: The name of the visitor to delete
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Success message
+ *       404:
+ *         description: Visitor not found or unauthorized
+ *       500:
+ *         description: Internal Server Error
+ * 
  * @openapi
  * /get/my-visitors:
  *   get:
@@ -349,6 +370,26 @@
  *       '500':
  *         description: Internal Server Error
  *
+ * @openapi
+ * /test/delete/visitor/{visitorname}:
+ *   delete:
+ *     summary: Delete a visitor by name
+ *     tags:
+ *       - Test-Member
+ *     parameters:
+ *       - name: visitorname
+ *         in: path
+ *         required: true
+ *         description: The name of the visitor to delete
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Success message
+ *       404:
+ *         description: Visitor not found or unauthorized
+ *       500:
+ *         description: Internal Server Error
  * 
  *@openapi
  * /get/my-visitors:
@@ -356,7 +397,7 @@
  *     summary: Get My Visitors
  *     description: Get a list of visitors created by the member
  *     tags:
- *       - Test-Member
+ *       - All Role
  *     security:
  *       - BearerAuth: []
  *     responses:

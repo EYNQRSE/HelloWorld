@@ -8,6 +8,7 @@ const cors = require('cors'); // Import the cors middleware
 const timestamp = Date.now();
 const date = new Date(timestamp);
 const bcrypt = require('bcrypt');
+const { ObjectId } = require('mongodb'); // Import ObjectId for creating unique IDs
 
 console.log(date.toLocaleString()); // Display the date and time in the local format
 
@@ -18,10 +19,12 @@ const TimeOptions = {
     hour: '2-digit', 
     minute: '2-digit', 
     second: '2-digit', 
-    hour12: false 
+    hour12: false, 
+    timeZone: 'Asia/Kuala_Lumpur'
+
   };
   
-  const formattedDate = date.toLocaleString('en-US', TimeOptions);
+  const formattedDate = date.toLocaleString('en-MY', TimeOptions);
   
   console.log(formattedDate);
 
@@ -145,30 +148,6 @@ async function login(reqUsername, reqPassword) {
     }
 }
 
-//update computer (admin)
-app.put('/update/computer/:computername', verifyTokenAndRole('admin'), async (req, res) => {
-    console.log('/update/computer/:computername: req.user', req.user); 
-    const computername = req.params.computername;
-    const { systemworking, available } = req.body;
-
-    try {
-        const updatecomputerResult = await client
-            .db('configure')
-            .collection('computer')
-            .updateOne({ computername },
-                { $set: { systemworking, available } });
-
-        if (updatecomputerResult.modifiedCount === 0) {
-            return res.status(404).send('computer not found or unauthorized');
-        }
-
-        res.send('computer updated successfully');
-    } catch (error) {
-        console.error(error);
-        res.status(500).send('Internal Server Error');
-    }
-});
-
 // Admin create member
 app.post('/create/member', verifyTokenAndRole('admin'), async (req, res) => {
     console.log('/create/member: req.body', req.body);
@@ -215,7 +194,6 @@ async function createMember(reqmemberName, reqidproof, reqpassword, reqphone) {
     }
 }
 
-
 app.put('/retrieve/pass/:visitorname/:idproof', verifyTokenAndRole('admin'), async (req, res) => {
     console.log('/retrieve/pass/:visitorname/:idproof: req.user', req.user);
     const visitorname = req.params.visitorname;
@@ -226,6 +204,9 @@ app.put('/retrieve/pass/:visitorname/:idproof', verifyTokenAndRole('admin'), asy
     const computername = req.body.computername; // replace with actual value
 
     try {
+        const currentDate = new Date();
+        const formattedDate = currentDate.toLocaleDateString('en-MY'); // Format date as 'MM/DD/YYYY'
+
         const updateaccessResult = await client
             .db('cybercafe')
             .collection('customer')
@@ -238,12 +219,51 @@ app.put('/retrieve/pass/:visitorname/:idproof', verifyTokenAndRole('admin'), asy
             return res.status(404).send('Visitor not found or unauthorized');
         }
 
+        // Save the visitor information to the visitorLog collection
+        await saveToVisitorLog(req.user.memberName, visitorname, idproof, cabinno, computername);
+
         res.send('Access updated successfully');
     } catch (error) {
         console.error(error);
         res.status(500).send('Internal Server Error');
     }
 });
+
+async function saveToVisitorLog(memberName, visitorname, idproof, cabinno, computername) {
+    try {
+        const visitorLogData = {
+            memberName,
+            visitorname,
+            idproof,
+            entrytime: new Date().toLocaleTimeString(), // Optionally, you can store the entry time as well
+            cabinno,
+            computername,
+        };
+
+        const formattedLogDate = new Date().toLocaleDateString('en-US'); // Format date as 'MM/DD/YYYY'
+
+        // Use the formatted date as the document identifier in the visitorLog collection
+        const visitorLogCollection = client.db('cybercafe').collection('visitorLog');
+        const visitorLogDocument = await visitorLogCollection.findOne({ date: formattedLogDate });
+
+        if (visitorLogDocument) {
+            // If the document for the current date exists, push the visitor data to the array
+            await visitorLogCollection.updateOne(
+                { date: formattedLogDate },
+                { $push: { visitors: visitorLogData } }
+            );
+        } else {
+            // If the document for the current date does not exist, create a new one
+            await visitorLogCollection.insertOne({
+                date: formattedLogDate,
+                visitors: [visitorLogData],
+            });
+        }
+    } catch (error) {
+        console.error(error);
+        throw error;
+    }
+}
 
 //admin view member
 app.get('/get/member', verifyTokenAndRole('admin'), async (req, res) => {
@@ -444,6 +464,41 @@ async function createVisitor(memberName, visitorName) {
         return "Failed to create visitor account. Please try again later.";
     }
 }
+// Member delete visitor
+app.delete('/delete/visitor/:visitorname', verifyTokenAndRole('member'), async (req, res) => {
+    try {
+        const memberName = req.user.memberName;
+        const visitorNameToDelete = req.params.visitorname;
+
+        const deleteResult = await deleteVisitor(memberName, visitorNameToDelete);
+
+        if (deleteResult.deletedCount === 0) {
+            res.status(404).send('Visitor not found or unauthorized');
+        } else {
+            res.send('Visitor deleted successfully');
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Internal Server Error');
+    }
+});
+
+async function deleteVisitor(memberName, visitorName) {
+    try {
+        const deleteResult = await client
+            .db('cybercafe')
+            .collection('customer')
+            .updateOne(
+                { memberName, 'visitors.visitorname': visitorName },
+                { $pull: { visitors: { visitorname: visitorName } } }
+            );
+
+        return deleteResult;
+    } catch (error) {
+        console.error(error);
+        throw error;
+    }
+}
 
 // View visitors
 app.get('/get/my-visitors', verifyTokenAndRole(), async (req, res) => {
@@ -557,8 +612,8 @@ app.post('/test/login/member', async (req, res) => {
 
 async function testmemberLogin(memberName, password) {
     try {
-        console.log('Received login request for test-member:', idproof);
-        let matchUser = await client.db('cybercafe').collection('customer').findOne({ idproof: idproof });
+        console.log('Received login request for test-member:', memberName);
+        let matchUser = await client.db('cybercafe').collection('customer').findOne({ memberName: memberName });
 
         if (!matchUser) {
             return { message: 'User not found!' };
@@ -623,6 +678,43 @@ async function testcreateVisitor(memberName, visitorName) {
         return "Failed to create visitor account. Please try again later.";
     }
 }
+
+// test-Member delete visitor
+app.delete('/test/delete/visitor/:visitorname', verifyTokenAndRole('test-member'), async (req, res) => {
+    try {
+        const memberName = req.user.memberName;
+        const visitorNameToDelete = req.params.visitorname;
+
+        const deleteResult = await testdeleteVisitor(memberName, visitorNameToDelete);
+
+        if (deleteResult.deletedCount === 0) {
+            res.status(404).send('Visitor not found or unauthorized');
+        } else {
+            res.send('Visitor deleted successfully');
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Internal Server Error');
+    }
+});
+
+async function testdeleteVisitor(memberName, visitorName) {
+    try {
+        const deleteResult = await client
+            .db('cybercafe')
+            .collection('customer')
+            .updateOne(
+                { memberName, 'visitors.visitorname': visitorName },
+                { $pull: { visitors: { visitorname: visitorName } } }
+            );
+
+        return deleteResult;
+    } catch (error) {
+        console.error(error);
+        throw error;
+    }
+}
+
 
 function generateToken(userData) {
     try {
