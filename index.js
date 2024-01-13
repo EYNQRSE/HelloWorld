@@ -441,26 +441,24 @@ async function createVisitor(memberName, visitorName) {
 }
 
 // View visitors
-app.get('/get/my-visitors', verifyTokenAndRole, async (req, res) => {
+app.get('/get/my-visitors', verifyTokenAndRole(), async (req, res) => {
     try {
         const memberName = req.user.memberName;
 
+        let roleSpecificVisitors;
+
         if (req.user.role === 'admin') {
-            const allVisitors = await getAllVisitors();
-            res.send({ role: 'admin', visitors: allVisitors });
-        } else if (req.user.role === 'member') {
-            const visitors = await getVisitorsCreatedByMember(memberName);
-            res.send({ role: 'member', visitors: visitors });
+            roleSpecificVisitors = await getAllVisitors();
         } else {
-            const visitors = await getVisitorsCreatedByMember(memberName);
-            res.send({ role: 'test-member', visitors: visitors });
+            roleSpecificVisitors = await getVisitorsCreatedByMember(memberName);
         }
+
+        res.send({ role: req.user.role, visitors: roleSpecificVisitors });
     } catch (error) {
         console.error(error);
         res.status(500).send('Internal Server Error');
     }
 });
-
 
 async function getVisitorsCreatedByMember(memberName) {
     try {
@@ -493,6 +491,7 @@ async function getAllVisitors() {
         throw error;
     }
 }
+
 
 // test create member
 app.post('/test/create/member', async (req, res) => {
@@ -538,9 +537,9 @@ async function testcreateMember(reqmemberName, reqidproof, reqpassword, reqphone
 // test Member login
 app.post('/test/login/member', async (req, res) => {
     try {
-        const result = await testmemberLogin(req.body.idproof, req.body.password);
+        const result = await testmemberLogin(req.body.memberName, req.body.password);
         if (result.message === 'Correct password') {
-            const token = generateToken({ idproof: req.body.idproof, role: 'test-member', memberName: result.user.memberName });
+            const token = generateToken({ memberName: req.body.memberName, role: 'test-member'});
             res.send({ message: 'Successful login. Welcome to YOMOM CYBERCAFE', token });
         } else {
             res.send('Login unsuccessful');
@@ -551,7 +550,7 @@ app.post('/test/login/member', async (req, res) => {
     }
 });
 
-async function testmemberLogin(idproof, password) {
+async function testmemberLogin(memberName, password) {
     try {
         console.log('Received login request for test-member:', idproof);
         let matchUser = await client.db('cybercafe').collection('customer').findOne({ idproof: idproof });

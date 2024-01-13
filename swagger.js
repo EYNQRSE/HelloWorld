@@ -312,7 +312,7 @@
  *       content:
  *         application/json:
  *           example:
- *             idproof: 'idproof'
+ *             memberName: 'memberName'
  *             password: 'password'
  *     responses:
  *       '200':
