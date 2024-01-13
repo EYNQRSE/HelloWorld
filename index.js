@@ -346,18 +346,18 @@ async function updateMember(memberName, suspend) {
         throw error;
     }
 }
-
-// Member login
+//member login
 app.post('/login/member', async (req, res) => {
     try {
-        const result = await memberLogin(req.body.idproof, req.body.password);
-        
-        if (result.message === 'Correct password') {
-            if (result.user.suspended) {
-                return res.status(403).send('Account is suspended. Contact admin for assistance.');
-            }
-            const token = generateToken({ idproof: req.body.idproof, role: 'member' });
-            res.send({ message: 'Successful login. Welcome to YOMOM CYBERCAFE', token });
+        const result = await memberLogin(req.body.memberName, req.body.password);
+
+        if (result.success) {
+            const token = generateToken({
+                memberName: result.user.memberName,
+                role: 'member'
+            });
+            console.log('Generated Token:', token);
+            res.send({ message: 'Successful login', token });
         } else {
             res.send('Login unsuccessful');
         }
@@ -367,32 +367,24 @@ app.post('/login/member', async (req, res) => {
     }
 });
 
-async function memberLogin(idproof, password) {
+async function memberLogin(memberName, password) {
     try {
-        console.log('Entering memberLogin function');
-        console.log('ID Proof:', idproof);
-
-        const matchUser = await client.db('cybercafe').collection('customer').findOne({ idproof: idproof });
+        const matchUser = await client.db('cybercafe').collection('customer').findOne({ memberName: memberName });
 
         if (!matchUser) {
-            console.log('User not found for ID Proof:', idproof);
             return { success: false, message: 'User not found!' };
         }
 
         if (matchUser.suspended) {
-            console.log('Suspended account for ID Proof:', idproof);
-            return { success: false, message: 'Account is suspended', matchUser };
+            return { success: false, message: 'Account is suspended', user: matchUser };
         }
 
-        console.log('Before bcrypt.compare');
+        // Use bcrypt to securely compare hashed passwords
         const isPasswordCorrect = await bcrypt.compare(password, matchUser.password);
-        console.log('After bcrypt.compare');
 
         if (isPasswordCorrect) {
-            const token = generateToken({ idproof, role: 'member'});
-            return { success: true, message: 'Correct password', token };
+            return { success: true, message: 'Correct password', user: matchUser };
         } else {
-            console.log('Invalid password for ID Proof:', idproof);
             return { success: false, message: 'Invalid password' };
         }
     } catch (error) {
@@ -400,8 +392,6 @@ async function memberLogin(idproof, password) {
         return { success: false, message: 'Internal Server Error' };
     }
 }
-
-
 
 // Member create visitor
 app.post('/create/visitor', verifyTokenAndRole('member'), async (req, res) => {
