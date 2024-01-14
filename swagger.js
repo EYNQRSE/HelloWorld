@@ -53,6 +53,8 @@
  *         name: idproof
  *         required: true
  *         description: Idproof of the member
+ *       - in: path
+ *         name: membername
  *         schema:
  *           type: string
  *     requestBody:
@@ -61,6 +63,7 @@
  *           example:
  *             cabinno: '2'
  *             computername: 'PC_02'
+ *             memberName: 'ABU'
  *     responses:
  *       '200':
  *         description: Successful retrieve visitor pass
