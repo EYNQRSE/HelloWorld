@@ -63,7 +63,6 @@
  *           example:
  *             cabinno: '2'
  *             computername: 'PC_02'
- *             memberName: 'ABU'
  *     responses:
  *       '200':
  *         description: Successful retrieve visitor pass
