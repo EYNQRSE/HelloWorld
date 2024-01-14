@@ -231,6 +231,8 @@
  *     summary: Delete a visitor by name
  *     tags:
  *       - Member
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - name: visitorname
  *         in: path
@@ -324,6 +326,8 @@
  *     summary: Delete a visitor by name
  *     tags:
  *       - Test-Member
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - name: visitorname
  *         in: path

@@ -135,14 +135,18 @@ async function login(reqUsername, reqPassword) {
 // Admin create member
 app.post('/create/member', verifyTokenAndRole('admin'), async (req, res) => {
     console.log('/create/member: req.body', req.body);
-
-    let result = await createMember(
-        req.body.memberName,
-        req.body.idproof,
-        req.body.password,
-        req.body.phoneNumber
-    );
-    res.send(result);
+    try{
+        let result = await createMember(
+            req.body.memberName,
+            req.body.idproof,
+            req.body.password,
+            req.body.phoneNumber
+        );
+        res.send(result);
+    } catch (error) {
+        console.error(error);
+        res.status(500).send("Internal Server Error");
+    }
 });
 
 async function createMember(reqmemberName, reqidproof, reqpassword, reqphone) {
@@ -204,7 +208,9 @@ app.put('/retrieve/pass/:visitorname/:idproof', verifyTokenAndRole('admin'), asy
         }
 
         // Save the visitor information to the visitorLog collection
-        await saveToVisitorLog(req.user.memberName, visitorname, idproof, cabinno, computername);
+        await saveToVisitorLog(memberName, visitorname, idproof, cabinno, computername);
+
+        await removeVisitorDataFromCustomer(memberName, visitorname, idproof);
 
         res.send('Access updated successfully');
     } catch (error) {
@@ -224,7 +230,7 @@ async function saveToVisitorLog(memberName, visitorname, idproof, cabinno, compu
             computername,
         };
 
-        const formattedLogDate = new Date().toLocaleDateString('en-US'); // Format date as 'MM/DD/YYYY'
+        const formattedLogDate = new Date().toLocaleDateString('en-MY'); // Format date as 'MM/DD/YYYY'
 
         // Use the formatted date as the document identifier in the visitorLog collection
         const visitorLogCollection = client.db('cybercafe').collection('visitorLog');
@@ -243,6 +249,21 @@ async function saveToVisitorLog(memberName, visitorname, idproof, cabinno, compu
                 visitors: [visitorLogData],
             });
         }
+    } catch (error) {
+        console.error(error);
+        throw error;
+    }
+}
+
+async function removeVisitorDataFromCustomer(memberName, visitorname, idproof) {
+    try {
+        await client
+            .db('cybercafe')
+            .collection('customer')
+            .updateOne(
+                { "memberName": memberName },
+                { $pull: { "visitors": { "visitorname": visitorname, "idproof": idproof } } }
+            );
     } catch (error) {
         console.error(error);
         throw error;
