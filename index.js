@@ -184,6 +184,10 @@ async function createMember(reqmemberName, reqidproof, reqpassword, reqphone) {
 
 app.put('/retrieve/pass/:visitorname/:idproof', verifyTokenAndRole('admin'), async (req, res) => {
     console.log('/retrieve/pass/:visitorname/:idproof: req.user', req.user);
+
+    // Extracting memberName from req.user (assuming it's stored in req.user)
+    const memberName = req.user.memberName;
+
     const visitorname = req.params.visitorname;
     const idproof = req.params.idproof;
 
@@ -218,6 +222,7 @@ app.put('/retrieve/pass/:visitorname/:idproof', verifyTokenAndRole('admin'), asy
         res.status(500).send('Internal Server Error');
     }
 });
+
 
 async function saveToVisitorLog(memberName, visitorname, idproof, cabinno, computername) {
     try {
