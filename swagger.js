@@ -36,7 +36,7 @@
  *         description: Internal Server Error
  * 
  * @openapi
- * /retrieve/pass/{visitorname}/{idproof}:
+ * /retrieve/pass/{visitorname}/{idproof}/{memberName}:
  *   put:
  *     summary: Retrieve visitor pass information
  *     description: Retrieve pass information for a visitor based on their name
@@ -54,7 +54,7 @@
  *         required: true
  *         description: Idproof of the member
  *       - in: path
- *         name: membername
+ *         name: memberName
  *         schema:
  *           type: string
  *     requestBody:
