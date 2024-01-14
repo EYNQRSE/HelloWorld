@@ -186,7 +186,7 @@ app.put('/retrieve/pass/:visitorname/:idproof/:memberName', verifyTokenAndRole('
     console.log('/retrieve/pass/:visitorname/:idproof/:memberName');
 
     // Extracting memberName from req.user (assuming it's stored in req.user)
-    const memberName = req.user.memberName;
+    const memberName = req.params.memberName;
     const visitorname = req.params.visitorname;
     const idproof = req.params.idproof;
 
@@ -212,8 +212,6 @@ app.put('/retrieve/pass/:visitorname/:idproof/:memberName', verifyTokenAndRole('
 
         // Save the visitor information to the visitorLog collection
         await saveToVisitorLog(memberName, visitorname, idproof, cabinno, computername);
-
-        await removeVisitorDataFromCustomer(memberName, visitorname, idproof);
 
         res.send('Access updated successfully');
     } catch (error) {
@@ -253,21 +251,6 @@ async function saveToVisitorLog(memberName, visitorname, idproof, cabinno, compu
                 visitors: [visitorLogData],
             });
         }
-    } catch (error) {
-        console.error(error);
-        throw error;
-    }
-}
-
-async function removeVisitorDataFromCustomer(memberName, visitorname, idproof) {
-    try {
-        await client
-            .db('cybercafe')
-            .collection('customer')
-            .updateOne(
-                { "memberName": memberName },
-                { $pull: { "visitors": { "visitorname": visitorname, "idproof": idproof } } }
-            );
     } catch (error) {
         console.error(error);
         throw error;

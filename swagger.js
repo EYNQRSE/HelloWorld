@@ -55,6 +55,7 @@
  *         description: Idproof of the member
  *       - in: path
  *         name: memberName
+ *         required: true
  *         schema:
  *           type: string
  *     requestBody:
