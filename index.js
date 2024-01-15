@@ -8,14 +8,6 @@ const cors = require('cors'); // Import the cors middleware
 const bcrypt = require('bcrypt');
 const { ObjectId } = require('mongodb'); // Import ObjectId for creating unique IDs
 
-const TimeOptions = { 
-    hour: '2-digit', 
-    minute: '2-digit', 
-    second: '2-digit', 
-    hour12: false, 
-    timeZone: 'Asia/Kuala_Lumpur'
-};
-
 // Use cors middleware
 app.use(cors());
 
@@ -170,12 +162,7 @@ async function createMember(reqmemberName, reqidproof, reqpassword, reqphone) {
         });
 
         console.log('MongoDB Insert Result:', result);
-
-        if (result.insertedCount > 0) {
-            return { success: true, message: "Member account has been created. Welcome YOMOM member!!:D" };
-        } else {
-            return { success: false, message: "Failed to create member account. Please try again later." };
-        }
+        return { success: true, message: "Member account has been created. Welcome YOMOM member!!:D" };
     } catch (error) {
         console.error(error);
         return { success: false, message: "Internal Server Error" };
