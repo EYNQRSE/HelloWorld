@@ -7,6 +7,7 @@ const jwt = require('jsonwebtoken');
 const cors = require('cors'); // Import the cors middleware
 const bcrypt = require('bcrypt');
 const { ObjectId } = require('mongodb'); // Import ObjectId for creating unique IDs
+const rateLimit = require('express-rate-limit');
 
 // Use cors middleware
 app.use(cors());
@@ -39,6 +40,13 @@ const client = new MongoClient(uri, {
   }
 });
 
+const apiLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 5, // 5 requests per windowMs
+    message: 'Too many requests from this IP, please try again after 15 minutes.'
+});
+
+app.use(apiLimiter);
 //front page
 app.get('/', (req, res) => {
   res.send('welcome to YOMOM');
@@ -82,7 +90,7 @@ function verifyTokenAndRole(role) {
     };
 }
 
-app.post('/login/admin', (req, res) => {
+app.post('/login/admin', apiLimiter, (req, res) => {
     login(req.body.username, req.body.password)
         .then(result => {
             if (result.message === 'Access Granted') {
@@ -151,6 +159,13 @@ async function createMember(reqmemberName, reqidproof, reqpassword, reqphone) {
         // Hash the password before storing it
         const hashedPassword = await bcrypt.hash(reqpassword, 10);
 
+        // Check if the memberName already exists
+        const existingMember = await client.db('cybercafe').collection('customer').findOne({ memberName: reqmemberName });
+        if (existingMember) {
+            return { success: false, message: "MemberName already exists. Choose a different MemberName." };
+        }
+
+        // Insert the new member document
         const result = await client.db('cybercafe').collection('customer').insertOne({
             "memberName": reqmemberName,
             "idproof": reqidproof,
@@ -353,7 +368,7 @@ async function updateMember(memberName, suspend) {
     }
 }
 //member login
-app.post('/login/member', async (req, res) => {
+app.post('/login/member', apiLimiter, async (req, res) => {
     try {
         const result = await memberLogin(req.body.memberName, req.body.password);
 
@@ -380,7 +395,9 @@ async function memberLogin(memberName, password) {
         if (!matchUser) {
             return { success: false, message: 'User not found!' };
         }
-
+        if (!matchUser.role === 'member'){
+            return { success: false, message: 'User not found!' };
+        }
         if (matchUser.suspended) {
             return { success: false, message: 'Account is suspended', user: matchUser };
         }
@@ -578,7 +595,7 @@ async function testcreateMember(reqmemberName, reqidproof, reqpassword, reqphone
 }
 
 // test Member login
-app.post('/test/login/member', async (req, res) => {
+app.post('/test/login/member', apiLimiter, async (req, res) => {
     try {
         const result = await testmemberLogin(req.body.memberName, req.body.password);
         if (result.message === 'Correct password') {
@@ -600,6 +617,9 @@ async function testmemberLogin(memberName, password) {
 
         if (!matchUser) {
             return { message: 'User not found!' };
+        }
+        if (!matchUser.role === 'member'){
+            return { success: false, message: 'User not found!' };
         }
 
         // Use bcrypt to securely compare hashed passwords
