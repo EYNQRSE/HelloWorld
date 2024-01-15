@@ -41,7 +41,7 @@ const client = new MongoClient(uri, {
 });
 
 const apiLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
+    windowMs: 1 * 60 * 1000, // 15 minutes
     max: 5, // 5 requests per windowMs
     message: 'Too many requests from this IP, please try again after 15 minutes.'
 });
@@ -618,7 +618,7 @@ async function testmemberLogin(memberName, password) {
         if (!matchUser) {
             return { message: 'User not found!' };
         }
-        if (!matchUser.role === 'member'){
+        if (!matchUser.role === 'test-member'){
             return { success: false, message: 'User not found!' };
         }
 
