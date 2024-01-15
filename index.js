@@ -395,7 +395,7 @@ async function memberLogin(memberName, password) {
         if (!matchUser) {
             return { success: false, message: 'User not found!' };
         }
-        if (!matchUser.role === 'member'){
+        if (matchUser.role !== 'member'){
             return { success: false, message: 'User not found!' };
         }
         if (matchUser.suspended) {
@@ -618,7 +618,7 @@ async function testmemberLogin(memberName, password) {
         if (!matchUser) {
             return { message: 'User not found!' };
         }
-        if (!matchUser.role === 'test-member'){
+        if (matchUser.role !== 'test-member'){
             return { success: false, message: 'User not found!' };
         }
 
