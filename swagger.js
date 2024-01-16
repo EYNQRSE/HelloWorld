@@ -121,6 +121,28 @@
  *         description: Internal Server Error
  *
  * @openapi
+ * /get/member:
+ *   get:
+ *     summary: View VisitorLog (Admin Only)
+ *     description: Get a list of all members (admin only)
+ *     tags:
+ *       - Admin
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       '200':
+ *         description: A list of customers 
+ *         content:
+ *           application/json:
+ *               example:
+ *                  memberName: 'username'
+ *                  idproof: 'idproof'
+ *       '401':
+ *         description: Unauthorized
+ *       '500':
+ *         description: Internal Server Error
+ *
+ * @openapi
  * /get/member/phone/{idproof}:
  *   get:
  *     summary: View Member Phone Number (Admin Only)

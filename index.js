@@ -32,14 +32,31 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 //connect to mongo
 const { MongoClient, ServerApiVersion } = require('mongodb');
-const uri = "mongodb+srv://B022120016:hUF1LQVnNZ5d2QpI@group12.7c7yswx.mongodb.net/?retryWrites=true&w=majority";
-const client = new MongoClient(uri, {
-  serverApi: {
-    version: ServerApiVersion.v1,
-    strict: true,
-    deprecationErrors: true,
-  }
+const fs = require('fs');
+
+const credentialsPath = './X509-cert-688048128044571329.pem';
+const credentials = fs.readFileSync(credentialsPath);
+
+const client = new MongoClient('mongodb+srv://group12.7c7yswx.mongodb.net/?authSource=%24external&authMechanism=MONGODB-X509&retryWrites=true&w=majority', {
+  tlsCertificateKeyFile: credentials,
+  serverApi: ServerApiVersion.v1
 });
+
+async function run() {
+  try {
+    await client.connect();
+    const database = client.db("testDB");
+    const collection = database.collection("testCol");
+    const docCount = await collection.countDocuments({});
+    console.log(docCount);
+    // perform actions using client
+  } finally {
+    // Ensures that the client will close when you finish/error
+    await client.close();
+  }
+}
+
+run().catch(console.dir);
 
 const apiLimiter = rateLimit({
     windowMs: 1 * 60 * 1000, // 15 minutes
