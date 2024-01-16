@@ -20,6 +20,8 @@
     "swagger-ui-express": "^5.0.0",
     "cors":"^2.8.5",
     "bcrypt": "^5.1.1",
-    "express-rate-limit": "^7.1.5"
+    "express-rate-limit": "^7.1.5",
+    "express-sanitizer": "^1.0.6",
+    "express-validator": "^7.0.1"
   }
 }
