@@ -35,12 +35,20 @@ const { MongoClient, ServerApiVersion } = require('mongodb');
 const fs = require('fs');
 
 // Use only the file name since it's in the same directory
-const credentialsPath = 'X509-cert-688048128044571329.pem';
-const credentials = fs.readFileSync(credentialsPath);
+const { MongoClient, ServerApiVersion } = require('mongodb');
+const credentials = './X509-cert-688048128044571329.pem';
+const uri = "mongodb+srv://B022120016:hUF1LQVnNZ5d2QpI@group12.7c7yswx.mongodb.net/?retryWrites=true&w=majority";
+const client = new MongoClient(uri, {
+  serverApi: {
+    version: ServerApiVersion.v1,
+    strict: true,
+    deprecationErrors: true,
+  },
+  tlsCertificateKeyFile: credentials
+});
 
-const client = new MongoClient('mongodb+srv://group12.7c7yswx.mongodb.net/?authSource=%24external&authMechanism=MONGODB-X509&retryWrites=true&w=majority', {
-  tlsCertificateKeyFile: credentials,
-  serverApi: ServerApiVersion.v1
+client.connect().then(res => {
+  console.log(res);
 });
 
 
