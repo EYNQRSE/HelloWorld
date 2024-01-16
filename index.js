@@ -9,12 +9,9 @@ const bcrypt = require('bcrypt');
 const { ObjectId } = require('mongodb'); // Import ObjectId for creating unique IDs
 const rateLimit = require('express-rate-limit');
 const timeZone = 'Asia/Kuala_Lumpur';
-const { body, validationResult } = require('express-validator');
-const expressSanitizer = require('express-sanitizer');
 
 // Use cors middleware
 app.use(cors());
-app.use(expressSanitizer());
 
 //connect to swagger
 const swaggerUi = require('swagger-ui-express');
@@ -99,15 +96,7 @@ function verifyTokenAndRole(role) {
     };
 }
 
-app.post('/login/admin', apiLimiter, [
-    body('username').notEmpty().isString(),
-    body('password').notEmpty().isString(),
-], (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-    }
-
+app.post('/login/admin', apiLimiter, (req, res) => {
     login(req.body.username, req.body.password)
         .then(result => {
             if (result.message === 'Access Granted') {
@@ -150,27 +139,9 @@ async function login(reqUsername, reqPassword) {
 }
 
 // Admin create member
-app.post('/create/member', [
-    // Validation rules
-    body('memberName').notEmpty().isString(),
-    body('idproof').notEmpty().isString(),
-    body('password').notEmpty().isString(),
-    body('phoneNumber').notEmpty().isMobilePhone(),
-], verifyTokenAndRole('admin'), async (req, res) => {
+app.post('/create/member', verifyTokenAndRole('admin'), async (req, res) => {
     console.log('/create/member: req.body', req.body);
-
-    // Validation errors
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-    }
-
-    try {
-        // Sanitize user inputs
-        req.body.memberName = req.sanitize(req.body.memberName);
-        req.body.idproof = req.sanitize(req.body.idproof);
-        // ... sanitize other fields as needed
-
+    try{
         let result = await createMember(
             req.body.memberName,
             req.body.idproof,
@@ -221,18 +192,7 @@ async function createMember(reqmemberName, reqidproof, reqpassword, reqphone) {
     }
 }
 
-app.put('/retrieve/pass/:visitorname/:idproof/:memberName', verifyTokenAndRole('admin'), [
-    param('visitorname').notEmpty().isString(),
-    param('idproof').notEmpty().isString(),
-    param('memberName').notEmpty().isString(),
-    body('cabinno').notEmpty().isString(),
-    body('computername').notEmpty().isString(),
-], async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-    }
-
+app.put('/retrieve/pass/:visitorname/:idproof/:memberName', verifyTokenAndRole('admin'), async (req, res) => {
     console.log('/retrieve/pass/:visitorname/:idproof/:memberName');
 
     // Extracting memberName from req.user (assuming it's stored in req.user)
@@ -270,6 +230,43 @@ app.put('/retrieve/pass/:visitorname/:idproof/:memberName', verifyTokenAndRole('
     }
 });
 
+
+async function saveToVisitorLog(memberName, visitorname, idproof, cabinno, computername) {
+    try {
+        const visitorLogData = {
+            memberName,
+            visitorname,
+            idproof,
+            entrytime: new Date().toLocaleTimeString(), // Optionally, you can store the entry time as well
+            cabinno,
+            computername,
+        };
+
+        const formattedLogDate = new Date().toLocaleDateString('en-MY'); // Format date as 'MM/DD/YYYY'
+
+        // Use the formatted date as the document identifier in the visitorLog collection
+        const visitorLogCollection = client.db('cybercafe').collection('visitorLog');
+        const visitorLogDocument = await visitorLogCollection.findOne({ date: formattedLogDate });
+
+        if (visitorLogDocument) {
+            // If the document for the current date exists, push the visitor data to the array
+            await visitorLogCollection.updateOne(
+                { date: formattedLogDate },
+                { $push: { visitors: visitorLogData } }
+            );
+        } else {
+            // If the document for the current date does not exist, create a new one
+            await visitorLogCollection.insertOne({
+                date: formattedLogDate,
+                visitors: [visitorLogData],
+            });
+        }
+    } catch (error) {
+        console.error(error);
+        throw error;
+    }
+}
+
 //admin view member
 app.get('/get/member', verifyTokenAndRole('admin'), async (req, res) => {
     try {
@@ -301,20 +298,9 @@ async function getAllMembers() {
 }
 
 // Admin view member phone number
-app.get('/get/member/phone/:idproof', verifyTokenAndRole('admin'), [
-    // Validate and sanitize the idproof parameter
-    param('idproof').notEmpty().isString(),
-], async (req, res) => {
+app.get('/get/member/phone/:idproof', verifyTokenAndRole('admin'), async (req, res) => {
+    const idproof = req.params.idproof;
     try {
-        // Check for validation errors
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json({ errors: errors.array() });
-        }
-
-        const idproof = req.params.idproof;
-
-        // Continue with your logic
         if (req.user.role === 'admin') {
             const memberPhoneNumber = await getMembersPhoneNumber(idproof);
             if (memberPhoneNumber) {
@@ -353,24 +339,11 @@ async function getMembersPhoneNumber(idproof) {
 }
 
 // Admin update member suspension status
-app.put('/update/suspend/:memberName', verifyTokenAndRole('admin'), [
-    // Validate and sanitize the memberName parameter
-    param('memberName').notEmpty().isString(),
+app.put('/update/suspend/:memberName', verifyTokenAndRole('admin'), async (req, res) => {
+    const memberNameToUpdate = req.params.memberName;
+    const { suspended } = req.body;
 
-    // Validate and sanitize the suspended property in the request body
-    body('suspended').isBoolean(),
-], async (req, res) => {
     try {
-        // Check for validation errors
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json({ errors: errors.array() });
-        }
-
-        const memberNameToUpdate = req.params.memberName;
-        const { suspended } = req.body;
-
-        // Continue with your logic
         const updateMemberResult = await updateMember(memberNameToUpdate, suspended);
 
         if (updateMemberResult.matchedCount === 0) {
@@ -432,18 +405,8 @@ async function getAlldate() {
 }
 
 //member login
-app.post('/login/member', apiLimiter, [
-    // Validate and sanitize the memberName and password properties in the request body
-    body('memberName').notEmpty().isString(),
-    body('password').notEmpty().isString(),
-], async (req, res) => {
+app.post('/login/member', apiLimiter, async (req, res) => {
     try {
-        // Check for validation errors
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json({ errors: errors.array() });
-        }
-
         const result = await memberLogin(req.body.memberName, req.body.password);
 
         if (result.success) {
@@ -492,18 +455,9 @@ async function memberLogin(memberName, password) {
 
 
 // Member create visitor
-app.post('/create/visitor', verifyTokenAndRole('member'), [
-    // Validate and sanitize the visitorname and idproof properties in the request body
-    body('visitorname').notEmpty().isString(),
-    body('idproof').notEmpty().isString(),
-], async (req, res) => {
+app.post('/create/visitor', verifyTokenAndRole('member'), async (req, res) => {
     try {
-        // Check for validation errors
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json({ errors: errors.array() });
-        }
-
+        console.log(req.user)
         const membername = req.user.memberName;
 
         // Call the modified createVisitor function
@@ -547,18 +501,9 @@ async function createVisitor(memberName, visitorName) {
     }
 }
 // Member delete visitor
-app.delete('/delete/visitor/:visitorname', verifyTokenAndRole('member'), [
-    // Validate the visitorname parameter
-    param('visitorname').notEmpty().isString(),
-], async (req, res) => {
+app.delete('/delete/visitor/:visitorname', verifyTokenAndRole('member'), async (req, res) => {
     try {
-        // Check for validation errors
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json({ errors: errors.array() });
-        }
-
-        console.log(req.user);
+        console.log(req.user)
         const memberName = req.user.memberName;
         const visitorNameToDelete = req.params.visitorname;
 
@@ -646,36 +591,15 @@ async function getAllVisitors() {
 
 
 // test create member
-app.post('/test/create/member', [
-    // Validation rules
-    body('memberName').notEmpty().isString(),
-    body('idproof').notEmpty().isString(),
-    body('password').notEmpty().isString(),
-    body('phoneNumber').notEmpty().isMobilePhone(),
-], async (req, res) => {
-    // Validation errors
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-    }
+app.post('/test/create/member', async (req, res) => {
 
-    try {
-        // Sanitize user inputs
-        req.body.memberName = req.sanitize(req.body.memberName);
-        req.body.idproof = req.sanitize(req.body.idproof);
-        // ... sanitize other fields as needed
-
-        let result = await testcreateMember(
-            req.body.memberName,
-            req.body.idproof,
-            req.body.password,
-            req.body.phoneNumber
-        );
-        res.send(result);
-    } catch (error) {
-        console.error(error);
-        res.status(500).send("Internal Server Error");
-    }
+    let result = await testcreateMember(
+        req.body.memberName,
+        req.body.idproof,
+        req.body.password,
+        req.body.phoneNumber
+    );
+    res.send(result);
 });
 
 async function testcreateMember(reqmemberName, reqidproof, reqpassword, reqphone) {
@@ -708,23 +632,11 @@ async function testcreateMember(reqmemberName, reqidproof, reqpassword, reqphone
 }
 
 // test Member login
-app.post('/test/login/member', apiLimiter, [
-    // Validate and sanitize the memberName
-    body('memberName').notEmpty().isString().trim(),
-
-    // Validate and sanitize the password
-    body('password').notEmpty().isString().trim(),
-], async (req, res) => {
+app.post('/test/login/member', apiLimiter, async (req, res) => {
     try {
-        // Check for validation errors
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json({ errors: errors.array() });
-        }
-
         const result = await testmemberLogin(req.body.memberName, req.body.password);
         if (result.message === 'Correct password') {
-            const token = generateToken({ memberName: req.body.memberName, role: 'test-member' });
+            const token = generateToken({ memberName: req.body.memberName, role: 'test-member'});
             res.send({ message: 'Successful login. Welcome to YOMOM CYBERCAFE', token });
         } else {
             res.send('Login unsuccessful');
@@ -762,24 +674,12 @@ async function testmemberLogin(memberName, password) {
 }
 
 // test-Member create visitor
-app.post('/test/create/visitor', verifyTokenAndRole('test-member'), [
-    // Validate and sanitize the visitorname
-    body('visitorname').notEmpty().isString().trim(),
-
-    // Validate and sanitize the idProof
-    body('idProof').notEmpty().isString().trim(),
-], async (req, res) => {
+app.post('/test/create/visitor', verifyTokenAndRole('test-member'), async (req, res) => {
     try {
-        // Check for validation errors
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json({ errors: errors.array() });
-        }
-
-        console.log(req.user);
+        console.log(req.user)
         const membername = req.user.memberName;
 
-        // Call the modified testcreateVisitor function
+        // Call the modified createVisitor function
         let result = await testcreateVisitor(
             membername,
             req.body.visitorname,
@@ -820,17 +720,8 @@ async function testcreateVisitor(memberName, visitorName) {
 }
 
 // test-Member delete visitor
-app.delete('/test/delete/visitor/:visitorname', verifyTokenAndRole('test-member'), [
-    // Validate the visitorname parameter
-    param('visitorname').notEmpty().isString().trim(),
-], async (req, res) => {
+app.delete('/test/delete/visitor/:visitorname', verifyTokenAndRole('test-member'), async (req, res) => {
     try {
-        // Check for validation errors
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json({ errors: errors.array() });
-        }
-
         const memberName = req.user.memberName;
         const visitorNameToDelete = req.params.visitorname;
 
@@ -888,6 +779,12 @@ function isPasswordStrong(password) {
     return password.length >= minLength && regex.test(password);
   }
   
+client.connect().then(res => {
+    console.log(res);
+ }).catch(error => {
+    console.error('MongoDB Connection Error:', error);
+ });
+ 
 app.listen(port, () => {
     console.log(`Example app listening on port ${port}`);
 });
