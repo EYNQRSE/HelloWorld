@@ -32,11 +32,17 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 //connect to mongo
 const { MongoClient, ServerApiVersion } = require('mongodb');
-const credentials = './X509-cert-688048128044571329.pem'
+const fs = require('fs');
+
+// Use only the file name since it's in the same directory
+const credentialsPath = 'X509-cert-688048128044571329.pem';
+const credentials = fs.readFileSync(credentialsPath);
+
 const client = new MongoClient('mongodb+srv://group12.7c7yswx.mongodb.net/?authSource=%24external&authMechanism=MONGODB-X509&retryWrites=true&w=majority', {
   tlsCertificateKeyFile: credentials,
   serverApi: ServerApiVersion.v1
 });
+
 
 const apiLimiter = rateLimit({
     windowMs: 1 * 60 * 1000, // 15 minutes

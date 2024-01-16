@@ -121,10 +121,10 @@
  *         description: Internal Server Error
  *
  * @openapi
- * /get/member:
+ * /get/visitorLog:
  *   get:
  *     summary: View VisitorLog (Admin Only)
- *     description: Get a list of all members (admin only)
+ *     description: Get a list of all visitor (admin only)
  *     tags:
  *       - Admin
  *     security:
@@ -135,8 +135,8 @@
  *         content:
  *           application/json:
  *               example:
- *                  memberName: 'username'
- *                  idproof: 'idproof'
+ *                  entrytime: 'entrytime'
+ *                  visitorname: 'visitorname'
  *       '401':
  *         description: Unauthorized
  *       '500':
