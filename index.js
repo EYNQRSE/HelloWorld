@@ -9,6 +9,8 @@ const bcrypt = require('bcrypt');
 const { ObjectId } = require('mongodb'); // Import ObjectId for creating unique IDs
 const rateLimit = require('express-rate-limit');
 const timeZone = 'Asia/Kuala_Lumpur';
+const { body, validationResult } = require('express-validator');
+const expressSanitizer = require('express-sanitizer');
 
 // Use cors middleware
 app.use(cors());
@@ -96,7 +98,15 @@ function verifyTokenAndRole(role) {
     };
 }
 
-app.post('/login/admin', apiLimiter, (req, res) => {
+app.post('/login/admin', apiLimiter, [
+    body('username').notEmpty().isString(),
+    body('password').notEmpty().isString(),
+], (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+
     login(req.body.username, req.body.password)
         .then(result => {
             if (result.message === 'Access Granted') {
