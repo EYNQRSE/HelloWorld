@@ -779,12 +779,6 @@ function isPasswordStrong(password) {
     return password.length >= minLength && regex.test(password);
   }
   
-client.connect().then(res => {
-    console.log(res);
- }).catch(error => {
-    console.error('MongoDB Connection Error:', error);
- });
- 
 app.listen(port, () => {
     console.log(`Example app listening on port ${port}`);
 });
