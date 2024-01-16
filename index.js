@@ -8,6 +8,7 @@ const cors = require('cors'); // Import the cors middleware
 const bcrypt = require('bcrypt');
 const { ObjectId } = require('mongodb'); // Import ObjectId for creating unique IDs
 const rateLimit = require('express-rate-limit');
+const timeZone = 'Asia/Kuala_Lumpur';
 
 // Use cors middleware
 app.use(cors());
@@ -200,7 +201,7 @@ app.put('/retrieve/pass/:visitorname/:idproof/:memberName', verifyTokenAndRole('
 
     try {
         const currentDate = new Date();
-        const formattedDate = currentDate.toLocaleDateString('en-MY'); // Format date as 'MM/DD/YYYY'
+        const formattedDate = currentDate.toLocaleTimeString('en-US', { timeZone }); // Format date as 'MM/DD/YYYY'
 
         const updateaccessResult = await client
             .db('cybercafe')
@@ -367,6 +368,37 @@ async function updateMember(memberName, suspend) {
         throw error;
     }
 }
+
+// get visitorLog
+app.get('/get/visitorLog', verifyTokenAndRole('admin'), async (req, res) => {
+    try {
+        if (req.user.role === 'admin') {
+            const allvisitorLog = await getAlldate();
+            res.send(allvisitorLog);  // Corrected: Send allvisitorLog instead of allMembers
+        } else {
+            res.status(403).send('Forbidden: Admin access required');
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Internal Server Error');
+    }
+});
+
+async function getAlldate() {
+    try {
+        const result = await client
+            .db('cybercafe')
+            .collection('visitorLog')
+            .find({}, { _id: 0, date: 1, })
+            .toArray();
+
+        return result;
+    } catch (error) {
+        console.error(error);
+        throw error;
+    }
+}
+
 //member login
 app.post('/login/member', apiLimiter, async (req, res) => {
     try {
