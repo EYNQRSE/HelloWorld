@@ -131,7 +131,7 @@
  *       - BearerAuth: []
  *     responses:
  *       '200':
- *         description: A list of customers 
+ *         description: A list of visitor 
  *         content:
  *           application/json:
  *               example:

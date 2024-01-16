@@ -30,11 +30,6 @@ const SwaggerOptions = {
 const swaggerSpec = swaggerJsdoc(SwaggerOptions);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-//connect to mongo
-const { MongoClient, ServerApiVersion } = require('mongodb');
-const fs = require('fs');
-
-// Use only the file name since it's in the same directory
 const { MongoClient, ServerApiVersion } = require('mongodb');
 const credentials = './X509-cert-688048128044571329.pem';
 const uri = "mongodb+srv://B022120016:hUF1LQVnNZ5d2QpI@group12.7c7yswx.mongodb.net/?retryWrites=true&w=majority";
@@ -50,7 +45,6 @@ const client = new MongoClient(uri, {
 client.connect().then(res => {
   console.log(res);
 });
-
 
 const apiLimiter = rateLimit({
     windowMs: 1 * 60 * 1000, // 15 minutes
