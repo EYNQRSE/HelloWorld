@@ -215,19 +215,28 @@ async function createMember(reqmemberName, reqidproof, reqpassword, reqphone) {
     }
 }
 
-app.put('/retrieve/pass/:visitorname/:idproof/:memberName', verifyTokenAndRole('admin'), async (req, res) => {
-    console.log('/retrieve/pass/:visitorname/:idproof/:memberName');
-
-    // Extracting memberName from req.user (assuming it's stored in req.user)
-    const memberName = req.params.memberName;
-    const visitorname = req.params.visitorname;
-    const idproof = req.params.idproof;
-
-    // Assuming cabinno and computername are defined elsewhere in your code or passed as parameters
-    const cabinno = req.body.cabinno; // replace with actual value
-    const computername = req.body.computername; // replace with actual value
-
+app.put('/retrieve/pass/:visitorname/:idproof/:memberName', verifyTokenAndRole('admin'), [
+    param('visitorname').notEmpty().isString(),
+    param('idproof').notEmpty().isString(),
+    param('memberName').notEmpty().isString(),
+    body('cabinno').notEmpty().isInt(),
+    body('computername').notEmpty().isString(),
+], async (req, res) => {
     try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ errors: errors.array() });
+        }
+
+        // Extracting memberName from req.user (assuming it's stored in req.user)
+        const memberName = req.params.memberName;
+        const visitorname = req.params.visitorname;
+        const idproof = req.params.idproof;
+
+        // Assuming cabinno and computername are defined elsewhere in your code or passed as parameters
+        const cabinno = req.body.cabinno; // replace with actual value
+        const computername = req.body.computername; // replace with actual value
+
         const currentDate = new Date();
         const formattedDate = currentDate.toLocaleTimeString('en-US', { timeZone }); // Format date as 'MM/DD/YYYY'
 
@@ -362,11 +371,16 @@ async function getMembersPhoneNumber(idproof) {
 }
 
 // Admin update member suspension status
-app.put('/update/suspend/:memberName', verifyTokenAndRole('admin'), async (req, res) => {
-    const memberNameToUpdate = req.params.memberName;
-    const { suspended } = req.body;
-
+app.put('/update/suspend/:memberName', verifyTokenAndRole('admin'), [
+    body('suspended').notEmpty().isBoolean(),
+], async (req, res) => {
     try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ errors: errors.array() });
+        }
+        const memberNameToUpdate = req.params.memberName;
+        const { suspended } = req.body;
         const updateMemberResult = await updateMember(memberNameToUpdate, suspended);
 
         if (updateMemberResult.matchedCount === 0) {
@@ -428,8 +442,15 @@ async function getAlldate() {
 }
 
 //member login
-app.post('/login/member', apiLimiter, async (req, res) => {
+app.post('/login/member', apiLimiter, [
+    body('memberName').notEmpty().isString(),
+    body('password').notEmpty().isString(),
+], async (req, res) => {
     try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ errors: errors.array() });
+        }
         const result = await memberLogin(req.body.memberName, req.body.password);
 
         if (result.success) {
@@ -478,8 +499,15 @@ async function memberLogin(memberName, password) {
 
 
 // Member create visitor
-app.post('/create/visitor', verifyTokenAndRole('member'), async (req, res) => {
+app.post('/create/visitor', verifyTokenAndRole('member'), [
+    body('visitorname').notEmpty().isString(),
+    body('idproof').notEmpty().isString(),
+], async (req, res) => {
     try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ errors: errors.array() });
+        }
         console.log(req.user)
         const membername = req.user.memberName;
 
@@ -524,8 +552,14 @@ async function createVisitor(memberName, visitorName) {
     }
 }
 // Member delete visitor
-app.delete('/delete/visitor/:visitorname', verifyTokenAndRole('member'), async (req, res) => {
+app.delete('/delete/visitor/:visitorname', verifyTokenAndRole('member'), [
+    param('visitorname').notEmpty().isString(),
+], async (req, res) => {
     try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ errors: errors.array() });
+        }
         console.log(req.user)
         const memberName = req.user.memberName;
         const visitorNameToDelete = req.params.visitorname;
