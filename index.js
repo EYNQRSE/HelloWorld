@@ -9,6 +9,7 @@ const bcrypt = require('bcrypt');
 const { ObjectId } = require('mongodb'); // Import ObjectId for creating unique IDs
 const rateLimit = require('express-rate-limit');
 const timeZone = 'Asia/Kuala_Lumpur';
+const { body, validationResult } = require('express-validator');
 
 // Use cors middleware
 app.use(cors());
