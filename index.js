@@ -543,14 +543,8 @@ async function createVisitor(memberName, visitorName) {
     }
 }
 // Member delete visitor
-app.delete('/delete/visitor/:visitorname', verifyTokenAndRole('member'), [
-    param('visitorname').notEmpty().isString(),
-], async (req, res) => {
+app.delete('/delete/visitor/:visitorname', verifyTokenAndRole('member'), async (req, res) => {
     try {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json({ errors: errors.array() });
-        }
         console.log(req.user)
         const memberName = req.user.memberName;
         const visitorNameToDelete = req.params.visitorname;
