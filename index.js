@@ -51,7 +51,13 @@ client.connect().then(res => {
 const apiLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: 5, // 5 requests per windowMs
-    message: 'Too many requests from this IP, please try again after 15 minutes.'
+    message: 'Too many requests from this IP, please try again after 15 minutes.',
+    keyGenerator: (req /*, res */) => {
+        return req.ip; // Use the client's IP address as the key
+    },
+    handler: (req, res) => {
+        res.status(429).send('Too many requests from this IP, please try again after 15 minutes.');
+    },
 });
 
 app.use(apiLimiter);
@@ -102,6 +108,8 @@ app.post('/login/admin', apiLimiter, [
     body('username').notEmpty().isString(),
     body('password').notEmpty().isString(),
 ], (req, res) => {
+    req.sanitize('username').escape();
+    req.sanitize('password').escape();
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
@@ -149,22 +157,45 @@ async function login(reqUsername, reqPassword) {
 }
 
 // Admin create member
-app.post('/create/member', verifyTokenAndRole('admin'), async (req, res) => {
-    console.log('/create/member: req.body', req.body);
-    try{
-        let result = await createMember(
-            req.body.memberName,
-            req.body.idproof,
-            req.body.password,
-            req.body.phoneNumber
-        );
-        res.send(result);
-    } catch (error) {
-        console.error(error);
-        res.status(500).send("Internal Server Error");
-    }
-});
+app.post(
+    '/create/member',
+    verifyTokenAndRole('admin'),
+    [
+        // Validation middleware for request body
+        body('memberName').notEmpty().isString(),
+        body('idproof').notEmpty().isString(),
+        body('password').notEmpty().isString(),
+        body('phoneNumber').notEmpty().isString(),
+    ],
+    (req, res) => {
+        console.log('/create/member: req.body', req.body);
 
+        // Validation check
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ errors: errors.array() });
+        }
+
+        // Sanitize user inputs
+        req.sanitizeBody('memberName').escape();
+        req.sanitizeBody('idproof').escape();
+        req.sanitizeBody('password').escape();
+        req.sanitizeBody('phoneNumber').escape();
+
+        try {
+            let result = await createMember(
+                req.body.memberName,
+                req.body.idproof,
+                req.body.password,
+                req.body.phoneNumber
+            );
+            res.send(result);
+        } catch (error) {
+            console.error(error);
+            res.status(500).send('Internal Server Error');
+        }
+    }
+);  
 async function createMember(reqmemberName, reqidproof, reqpassword, reqphone) {
     try {
         // Check if the password is strong
