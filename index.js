@@ -674,8 +674,15 @@ async function testcreateMember(reqmemberName, reqidproof, reqpassword, reqphone
 }
 
 // test Member login
-app.post('/test/login/member', apiLimiter, async (req, res) => {
+app.post('/test/login/member', apiLimiter, [
+    body('memberName').notEmpty().isString(),
+    body('password').notEmpty().isString(),
+], async (req, res) => {
     try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ errors: errors.array() });
+        }
         const result = await testmemberLogin(req.body.memberName, req.body.password);
         if (result.message === 'Correct password') {
             const token = generateToken({ memberName: req.body.memberName, role: 'test-member'});
