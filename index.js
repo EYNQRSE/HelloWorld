@@ -9,8 +9,6 @@ const bcrypt = require('bcrypt');
 const { ObjectId } = require('mongodb'); // Import ObjectId for creating unique IDs
 const rateLimit = require('express-rate-limit');
 const timeZone = 'Asia/Kuala_Lumpur';
-const { body, validationResult } = require('express-validator');
-const expressSanitizer = require('express-sanitizer');
 
 // Use cors middleware
 app.use(cors());
@@ -104,11 +102,12 @@ function verifyTokenAndRole(role) {
 app.post('/login/admin', apiLimiter, [
     body('username').notEmpty().isString(),
     body('password').notEmpty().isString(),
-], (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-    }
+], async (req, res) => {
+    try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ errors: errors.array() });
+        }
 
     login(req.body.username, req.body.password)
         .then(result => {
@@ -123,10 +122,10 @@ app.post('/login/admin', apiLimiter, [
                 res.send('Login unsuccessful');
             }
         })
-        .catch(error => {
-            console.error(error);
-            res.status(500).send("Internal Server Error");
-        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send("Internal Server Error");
+    }
 });
 
 async function login(reqUsername, reqPassword) {
@@ -152,9 +151,19 @@ async function login(reqUsername, reqPassword) {
 }
 
 // Admin create member
-app.post('/create/member', verifyTokenAndRole('admin'), async (req, res) => {
+app.post('/create/member', verifyTokenAndRole('admin'), [
+    body('memberName').notEmpty().isString(),
+    body('idproof').notEmpty().isString(),
+    body('password').notEmpty().isString(),
+    body('phoneNumber').notEmpty().isString(),
+], async (req, res) => {
+    try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ errors: errors.array() });
+        }
     console.log('/create/member: req.body', req.body);
-    try{
+
         let result = await createMember(
             req.body.memberName,
             req.body.idproof,
