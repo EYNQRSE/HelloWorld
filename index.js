@@ -809,7 +809,7 @@ function generateToken(userData) {
     try {
         const token = jwt.sign(
             userData,
-            'password',
+            'YOMOMCYBERCAFEPASSKEY',
             { expiresIn: 600 }
         );
         console.log(token);
