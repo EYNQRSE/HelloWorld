@@ -50,7 +50,7 @@ client.connect().then(res => {
 });
 
 const redisClient = redis.createClient({
-    host: 'your-redis-host', // Update with your Redis server host
+    host: '127.0.0.1', // Update with your Redis server host
     port: 6379, // Update with your Redis server port
     // ... other Redis configuration options if needed
 });
