@@ -74,7 +74,7 @@ function verifyTokenAndRole(role) {
         let token = header.split(' ')[1];
 
         try {
-            let decoded = jwt.verify(token, 'password');
+            let decoded = jwt.verify(token, 'YOMOMCYBERCAFEPASSKEY');
             req.user = decoded;
 
             // Ensure role is present in the token
