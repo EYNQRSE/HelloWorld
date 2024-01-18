@@ -10,8 +10,6 @@ const { ObjectId } = require('mongodb'); // Import ObjectId for creating unique 
 const rateLimit = require('express-rate-limit');
 const timeZone = 'Asia/Kuala_Lumpur';
 const { body, validationResult } = require('express-validator');
-const RedisStore = require('rate-limit-redis');
-const redis = require('redis');
 
 // Use cors middleware
 app.use(cors());
@@ -49,17 +47,8 @@ client.connect().then(res => {
   console.log(res);
 });
 
-const redisClient = redis.createClient({
-    host: '127.0.0.1', // Update with your Redis server host
-    port: 6379, // Update with your Redis server port
-    // ... other Redis configuration options if needed
-});
-
 const apiLimiter = rateLimit({
-    store: new RedisStore({
-        client: redisClient,
-    }),
-    windowMs: 15 * 60 * 1000, // 15 minutes
+    windowMs: 1 * 60 * 1000, // 15 minutes
     max: 5, // 5 requests per windowMs
     message: 'Too many requests from this IP, please try again after 15 minutes.',
     keyGenerator: (req) => {
