@@ -48,16 +48,16 @@ client.connect().then(res => {
 });
 
 const apiLimiter = rateLimit({
-    windowMs: 1 * 60 * 1000, // 15 minutes
+    windowMs: 1 * 60 * 1000, // 1 minutes
     max: 5, // 5 requests per windowMs
-    message: 'Too many requests from this IP, please try again after 15 minutes.',
+    message: 'Too many requests from this IP, please try again after 1 minutes.',
     keyGenerator: (req) => {
         // Use a unique key for each user, for example, based on user ID
         return req.user ? req.user.id : req.ip;
     },
 });
-
 app.use(apiLimiter);
+
 //front page
 app.get('/', (req, res) => {
   res.send('welcome to YOMOM');
@@ -493,7 +493,6 @@ async function memberLogin(memberName, password) {
 // Member create visitor
 app.post('/create/visitor', verifyTokenAndRole('member'), [
     body('visitorname').notEmpty().isString(),
-    body('idproof').notEmpty().isString(),
 ], async (req, res) => {
     try {
         const errors = validationResult(req);

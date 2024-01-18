@@ -241,7 +241,7 @@
  *       content:
  *         application/json:
  *           example:
- *             visitorname: 'visitor name'
+ *             visitorname: 'visitorname'
  *     responses:
  *       '200':
  *         description: Visitor account created successfully
